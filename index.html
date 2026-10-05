@@ -1471,12 +1471,14 @@ async function init() {
       else markDelivered();
       updateBadges();
     })
-  .on("postgres_changes",
-    { event: "*", schema: "public", table: "friend_requests", filter: "receiver_id=eq." + me.id },
-    () => updateBadges())
+
   .on("postgres_changes",
     { event: "UPDATE", schema: "public", table: "messages", filter: "sender_id=eq." + me.id },
     pl => { const el = msgEls[pl.new.id]; if (el) paintTick(el, pl.new); })
+  .subscribe();
+  sb.channel("reqs").on("postgres_changes",
+    { event: "*", schema: "public", table: "friend_requests", filter: "receiver_id=eq." + me.id },
+    () => updateBadges())
   .subscribe();
   const { data: del } = await sb.from("deletion_requests").select("requested_at").eq("user_id", me.id).maybeSingle();
   if (del) {
