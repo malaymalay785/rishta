@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rishta.rishtapk.workers.dev/sitemap.xml

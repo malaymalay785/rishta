@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
-<title>Rishta</title>
+<title>Rishta PK – Find Your Perfect Match | Free Matrimony</title>
+<meta name="description" content="Looking for a life partner? Join Rishta PK free: create your profile, connect and chat safely. Made for Pakistani singles and families worldwide.">
+<link rel="canonical" href="https://rishta.rishtapk.workers.dev/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23b8325a'/%3E%3Ccircle cx='38' cy='50' r='20' fill='none' stroke='white' stroke-width='7'/%3E%3Ccircle cx='62' cy='50' r='20' fill='none' stroke='white' stroke-width='7'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Rishta PK – Find Your Perfect Match">
+<meta property="og:description" content="Your perfect match could be one tap away. Join free, build your profile and chat with respect.">
+<meta property="og:url" content="https://rishta.rishtapk.workers.dev/">
+<meta name="theme-color" content="#6d1a37">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
   body { font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 16px; background: #f2f4f3; }
@@ -339,12 +347,17 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
       <label>Profile photo
         <div class="ph-wrap">
           <div id="ph-img">No photo</div>
-          <button type="button" id="ph-btn" class="alt" onclick="document.getElementById('ph-file').click()">Choose photo</button>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+            <button type="button" id="ph-btn" class="alt" onclick="document.getElementById('ph-file').click()">Choose photo</button>
+            <button type="button" id="ph-cam-btn" class="alt" onclick="document.getElementById('ph-cam').click()">Take photo</button>
+            <div class="lock-note" id="ph-note" style="text-align:left;margin:0"></div>
+          </div>
         </div>
       </label>
       <input type="file" id="ph-file" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+      <input type="file" id="ph-cam" accept="image/*" capture="user" style="display:none" onchange="uploadPhoto(this)">
       <input type="hidden" id="s-photo">
-      <div class="warn">Please check your details carefully. After you save, you can edit your profile again only after 30 days.</div>
+      <div class="warn">Please check your details carefully. You can edit your profile 5 times per month and change your photo once every 3 days.</div>
     </div>
 
     <div class="su-nav">
@@ -575,6 +588,24 @@ async function logout() {
   location.reload();
 }
 
+function shrink(f) {
+  return new Promise(res => {
+    const img = new Image();
+    const u = URL.createObjectURL(f);
+    img.onload = () => {
+      const s = Math.min(1, 1200 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * s);
+      c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u);
+      c.toBlob(b => res(b || f), "image/jpeg", 0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); res(f); };
+    img.src = u;
+  });
+}
+
 const CLOUD_NAME = "niucifyi";
 const CLOUD_PRESET = "rishta_photos";
 let gender = "", step = 1, myProfile = null;
@@ -589,10 +620,10 @@ async function uploadPhoto(input) {
   const f = input.files[0];
   input.value = "";
   if (!f) return;
-  if (f.size > 5 * 1024 * 1024) { alert("Photo must be under 5 MB."); return; }
+  if (!f.type.startsWith("image/")) { alert("Please choose an image."); return; }
   $("ph-btn").textContent = "Uploading...";
   const fd = new FormData();
-  fd.append("file", f);
+  fd.append("file", await shrink(f), "photo.jpg");
   fd.append("upload_preset", CLOUD_PRESET);
   try {
     const r = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload", { method: "POST", body: fd });
@@ -674,6 +705,7 @@ function showSetup() {
   $("home").style.display = "none";
   $("setup").style.display = "block";
   showStep(1);
+  lockPhotoUI();
 }
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -916,7 +948,7 @@ function renderMine() {
   $("edit-btn").disabled = d > 0;
   $("lock-note").textContent = d > 0
     ? "You can edit again in " + d + " day" + (d > 1 ? "s" : "") + "."
-    : "You can edit your profile once every 30 days.";
+    : (isOwner() ? "Owner: unlimited edits." : "You have " + editsLeft() + " of 5 edits left this month.");
 }
 
 function openProfile(id) {
@@ -1039,11 +1071,32 @@ async function blockUser(id, btn) {
   toast("Blocked.");
 }
 
+const isOwner = () => !!me && (me.email || "").toLowerCase() === ADMIN_EMAIL;
+
+function editsLeft() {
+  if (!myProfile || !myProfile.edit_window_start) return 5;
+  const used = (Date.now() - new Date(myProfile.edit_window_start).getTime()) / 86400000;
+  return used >= 30 ? 5 : Math.max(0, 5 - (myProfile.edit_count || 0));
+}
+
+function photoDays() {
+  if (isOwner() || !myProfile || !myProfile.complete || !myProfile.photo_changed_at) return 0;
+  return Math.max(0, Math.ceil(3 - (Date.now() - new Date(myProfile.photo_changed_at)) / 86400000));
+}
+
+function lockPhotoUI() {
+  const d = photoDays();
+  $("ph-btn").disabled = d > 0;
+  $("ph-cam-btn").disabled = d > 0;
+  $("ph-note").textContent = d > 0 ? "You can change your photo again in " + d + " day" + (d > 1 ? "s" : "") + "." : "Photo can be changed once every 3 days.";
+}
+
 function daysLeft() {
   if (me && (me.email || "").toLowerCase() === ADMIN_EMAIL) return 0;
-  if (!myProfile || !myProfile.last_edit) return 0;
-  const used = (Date.now() - new Date(myProfile.last_edit).getTime()) / 86400000;
-  return Math.max(0, Math.ceil(30 - used));
+  if (isOwner() || !myProfile || !myProfile.complete || !myProfile.edit_window_start) return 0;
+  const used = (Date.now() - new Date(myProfile.edit_window_start).getTime()) / 86400000;
+  if (used >= 30 || (myProfile.edit_count || 0) < 5) return 0;
+  return Math.max(1, Math.ceil(30 - used));
 }
 
 const WHATSAPP_CHANNEL = "https://whatsapp.com/channel/0029Vb9EkIC7oQhZJb1wVE17";
@@ -1137,9 +1190,10 @@ function showHowTo() {
       item("Messages", `New messages arrive live while the chat is open. Please stay polite and respectful.`)) +
 
     card("Editing your profile",
-      item("Once every 30 days", `You can edit your profile one time, then it is locked for 30 days.`) +
-      item("Edit button", `The Edit profile button turns grey during the lock and turns on again by itself when 30 days are over.`) +
-      `<div class="hw-note">Check your details carefully before you save, because you cannot change them again for 30 days.</div>`) +
+      item("5 edits a month", `You can edit your profile up to 5 times in 30 days.`) +
+      item("Photo", `You can change your photo once every 3 days. Pick it from your gallery or take a new one with the camera.`) +
+      item("Edit button", `The Edit profile button turns grey when your 5 edits are used and turns on again when the month is over.`) +
+      `<div class="hw-note">Check your details carefully before you save, because your edits are limited.</div>`) +
 
     card("Staying safe",
       item("Blocking", `A blocked person cannot see you or message you. You can undo it any time in Settings, Blocked users, then Unblock. The person can then appear on your Home again.`) +
@@ -1252,7 +1306,7 @@ async function saveProfile() {
   const { data, error } = await sb.from("profiles").upsert(p).select().single();
   saving = false;
   $("su-next").disabled = false;
-  if (error) { alert(/30 days/.test(error.message) ? "You can edit your profile only once every 30 days." : "Could not save: " + error.message); return; }
+  if (error) { alert(/limit|Photo can be/.test(error.message) ? error.message : "Could not save: " + error.message); return; }
   myProfile = data;
   showHome(data, "profile");
 }
