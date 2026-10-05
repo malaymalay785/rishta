@@ -287,6 +287,8 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .ad-r { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
 .ad-r div { flex: 1; word-break: break-word; }
 .ad-r button { width: auto; margin: 0; padding: 6px 12px; font-size: 12px; }
+.bnav button { position: relative; }
+.bdg { position: absolute; top: 2px; left: 50%; margin-left: 6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #e11d48; color: #fff; font-size: 11px; font-weight: bold; line-height: 18px; text-align: center; box-sizing: border-box; display: none; }
 </style>
 </head>
 <body>
@@ -892,6 +894,7 @@ async function answerReq(id, ok) {
                : sb.from("friend_requests").delete().eq("id", id).select();
   const { data, error } = await q;
   if (error || !data.length) { alert("This request is no longer available."); loadFriends(); return; }
+  updateBadges();
   if (ok) { alert("Accepted. You can now chat from the Chat tab."); go("chat"); } else loadFriends();
 }
 
@@ -921,7 +924,8 @@ async function openChat(id) {
     .or("and(sender_id.eq." + me.id + ",receiver_id.eq." + id + "),and(sender_id.eq." + id + ",receiver_id.eq." + me.id + ")")
     .order("created_at");
   (data || []).forEach(addMsg);
-  markSeen(id);
+  await markSeen(id);
+  updateBadges();
 }
 
 const msgEls = {};
@@ -1389,6 +1393,56 @@ async function saveProfile() {
   showHome(data, "profile");
 }
 
+function askNotif() {
+  Notification.requestPermission().then(function (p) {
+    if (p === "granted") location.reload();
+  });
+}
+
+function forceNotif() {
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(function (OneSignal) {
+    const chk = () => {
+      let o = document.getElementById("notif-wall");
+      if (window.Notification && Notification.permission === "granted") { if (o) o.remove(); try { OneSignal.User.PushSubscription.optIn(); } catch (e) {} return; }
+      if (!o) {
+        o = document.createElement("div");
+        o.id = "notif-wall";
+        o.style.cssText = "position:fixed;inset:0;z-index:200;background:linear-gradient(160deg,#6d1a37,#b8325a);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px";
+        document.body.appendChild(o);
+      }
+      const denied = window.Notification && Notification.permission === "denied";
+      o.innerHTML = '<div style="font-size:54px">🔔</div><h2 style="font-family:Georgia,serif;margin:12px 0 8px">Turn on notifications</h2>' +
+        '<p style="line-height:1.5;opacity:.92;max-width:300px">Without notifications you will miss messages and friend requests. We only send messages, requests and account alerts. No ads, no spam.</p>' +
+        (denied
+          ? '<p style="line-height:1.5;max-width:300px;margin-top:12px;background:rgba(255,255,255,.18);padding:10px 12px;border-radius:10px;font-size:13px">Notifications are blocked. Tap the lock icon next to the site address, open Permissions, set Notifications to Allow, then press the button below.</p><button class="gbtn" style="max-width:300px;margin-top:16px" onclick="location.reload()">I have allowed it</button>'
+          : '<button class="gbtn" style="max-width:300px;margin-top:20px" onclick="askNotif()">Turn on notifications</button>');
+    };
+    window.OneSignal = OneSignal;
+    OneSignal.Notifications.addEventListener("permissionChange", chk);
+    chk();
+  });
+}
+
+async function updateBadges() {
+  if (!me) return;
+  const [m, r] = await Promise.all([
+    sb.from("messages").select("id", { count: "exact", head: true }).eq("receiver_id", me.id).is("seen_at", null),
+    sb.from("friend_requests").select("id,created_at").eq("receiver_id", me.id).eq("status", "pending")
+  ]);
+  const msgs = m.count || 0;
+  const reqs = (r.data || []).filter(x => Date.now() - new Date(x.created_at) < DAY).length;
+  [["chat", msgs], ["friends", reqs]].forEach(([t, n]) => {
+    const b = document.querySelector('.bnav button[data-t="' + t + '"]');
+    if (!b) return;
+    let e = b.querySelector(".bdg");
+    if (!e) { e = document.createElement("span"); e.className = "bdg"; b.appendChild(e); }
+    e.textContent = n > 99 ? "99+" : n;
+    e.style.display = n > 0 ? "block" : "none";
+  });
+  try { if (navigator.setAppBadge) { (msgs + reqs) > 0 ? navigator.setAppBadge(msgs + reqs) : navigator.clearAppBadge(); } } catch (e) {}
+}
+
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   const { data: ms } = await sb.from("app_settings").select("value").eq("key", "maintenance").maybeSingle();
@@ -1398,22 +1452,26 @@ async function init() {
   if (!session) { $("login").style.display = "flex"; return; }
   me = session.user;
   window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(function (OneSignal) {
-    OneSignal.login(me.id);
-    if (!OneSignal.Notifications.permission) OneSignal.Notifications.requestPermission();
-  });
+  OneSignalDeferred.push(function (OneSignal) { OneSignal.login(me.id); });
+  forceNotif();
   history.replaceState({}, "", location.pathname);
   pingMe();
   setInterval(pingMe, 45000);
   setInterval(() => { if (!document.hidden && $("home").style.display === "block") refreshDots(); }, 20000);
 
   markDelivered();
+  updateBadges();
+  setInterval(updateBadges, 15000);
   sb.channel("inbox").on("postgres_changes",
     { event: "INSERT", schema: "public", table: "messages", filter: "receiver_id=eq." + me.id },
     pl => {
       if (chatPeer && pl.new.sender_id === chatPeer.id && $("chatbox").classList.contains("on")) { addMsg(pl.new); markSeen(chatPeer.id); }
       else markDelivered();
+      updateBadges();
     })
+  .on("postgres_changes",
+    { event: "*", schema: "public", table: "friend_requests", filter: "receiver_id=eq." + me.id },
+    () => updateBadges())
   .on("postgres_changes",
     { event: "UPDATE", schema: "public", table: "messages", filter: "sender_id=eq." + me.id },
     pl => { const el = msgEls[pl.new.id]; if (el) paintTick(el, pl.new); })
