@@ -1398,7 +1398,10 @@ async function init() {
   if (!session) { $("login").style.display = "flex"; return; }
   me = session.user;
   window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(function (OneSignal) { OneSignal.login(me.id); });
+  OneSignalDeferred.push(function (OneSignal) {
+    OneSignal.login(me.id);
+    if (!OneSignal.Notifications.permission) OneSignal.Notifications.requestPermission();
+  });
   history.replaceState({}, "", location.pathname);
   pingMe();
   setInterval(pingMe, 45000);
