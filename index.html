@@ -1154,6 +1154,7 @@ function daysLeft() {
 }
 
 const WHATSAPP_CHANNEL = "https://whatsapp.com/channel/0029Vb9EkIC7oQhZJb1wVE17";
+const FACEBOOK_PAGE = "https://www.facebook.com/profile.php?id=61595023654801";
 const SUPPORT_EMAIL = "lartkapagal@gmail.com";
 let setView = "main";
 
@@ -1297,7 +1298,8 @@ function showSupport() {
   setView = "support";
   $("sp-title").textContent = "Support center";
   $("sp-body").innerHTML =
-    '<a class="sp-row" href="' + WHATSAPP_CHANNEL + '" target="_blank" rel="noopener"><span>Our WhatsApp channel</span><span>&#8250;</span></a>' +
+    '<a class="sp-row" href="' + WHATSAPP_CHANNEL + '" target="_blank" rel="noopener"><span>Our WhatsApp channel' + vt({verified:true}) + '</span><span>&#8250;</span></a>' +
+    '<a class="sp-row" href="' + FACEBOOK_PAGE + '" target="_blank" rel="noopener"><span>Our Facebook page' + vt({verified:true}) + '</span><span>&#8250;</span></a>' +
     '<a class="sp-row" href="mailto:' + SUPPORT_EMAIL + '"><span>' + esc(SUPPORT_EMAIL) + '</span><span>&#8250;</span></a>' +
     '<div class="pf-card"><h3>Need help? Send us a message</h3>' +
     '<textarea id="sup-msg" rows="4" placeholder="Describe your problem"></textarea>' +
