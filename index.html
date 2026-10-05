@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rishta</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 16px; background: #f2f4f3; }
+  label { display: block; margin-top: 12px; font-size: 14px; color: #555; }
+  input, select, textarea { width: 100%; padding: 10px; margin-top: 4px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+  button { width: 100%; padding: 12px; margin-top: 14px; border: 0; border-radius: 8px; background: #b8325a; color: #fff; font-size: 16px; cursor: pointer; }
+  button.alt { background: #fff; color: #333; border: 1px solid #ccc; }
+body { background: #fbf6f4; color: #2b1a20; }
+#splash { position: fixed; inset: 0; z-index: 99; background: linear-gradient(160deg, #6d1a37, #b8325a); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; transition: opacity .6s; }
+#splash.hide { opacity: 0; pointer-events: none; }
+#splash h1 { font-family: Georgia, serif; font-size: 50px; margin: 16px 0 6px; }
+#splash p { opacity: .85; font-size: 15px; }
+.rings { animation: pop 1s ease both; }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+#login { position: fixed; inset: 0; background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 24px 80px; }
+#login h1 { font-family: Georgia, serif; font-size: 44px; margin: 14px 0 8px; }
+#login p { opacity: .9; line-height: 1.5; }
+#login .gbtn { position: absolute; bottom: 90px; left: 24px; right: 24px; max-width: 320px; margin: 0 auto; }
+#login small { position: absolute; bottom: 50px; left: 0; right: 0; margin: 0; color: rgba(255,255,255,.8); }
+.gbtn { background: #fff; color: #333; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.su-head { margin: -16px -16px 0; padding: 36px 20px 22px; background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; border-radius: 0 0 28px 28px; }
+.su-head h2 { font-family: Georgia, serif; font-size: 26px; }
+.su-head p { opacity: .9; margin-top: 6px; font-size: 14px; }
+.su-bar { height: 6px; background: rgba(255,255,255,.25); border-radius: 3px; margin-top: 16px; overflow: hidden; }
+.su-bar i { display: block; height: 100%; width: 25%; background: #fff; border-radius: 3px; transition: width .3s; }
+.su-step { display: none; padding-bottom: 6px; }
+.su-step.on { display: block; }
+.seg { display: flex; gap: 10px; margin-top: 6px; }
+.seg div { flex: 1; text-align: center; padding: 12px; border: 1px solid #ccc; border-radius: 10px; background: #fff; cursor: pointer; }
+.seg div.on { background: #b8325a; color: #fff; border-color: #b8325a; }
+.two { display: flex; gap: 10px; }
+.two label { flex: 1; }
+.su-nav { display: flex; gap: 10px; margin: 20px 0 30px; }
+.su-nav button { margin-top: 0; }
+.ph-wrap { display: flex; align-items: center; gap: 16px; margin-top: 8px; }
+#ph-img { width: 96px; height: 96px; border-radius: 50%; background: #e8dde1 center/cover no-repeat; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #8a6b75; flex-shrink: 0; }
+.ph-wrap button { margin-top: 0; }
+#home { padding-bottom: 84px; }
+.tab { display: none; }
+.tab.on { display: block; }
+
+.pc { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(109,26,55,.12); cursor: pointer; }
+.pc .pi { height: 170px; background: #e8dde1 center/cover no-repeat; }
+.pc .pt { padding: 10px 12px; }
+.pc b { display: block; font-size: 15px; }
+
+.bnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #fff; border-top: 1px solid #eadde2; display: flex; padding-bottom: env(safe-area-inset-bottom, 0); z-index: 5; }
+.bnav button { flex: 1; margin: 0; border-radius: 0; background: none; color: #8a6b75; padding: 15px 4px; font-size: 13px; }
+.bnav button.on { color: #b8325a; font-weight: bold; }
+.sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: flex-end; z-index: 50; }
+.sheet-bg.on { display: flex; }
+.sheet { background: #fff; width: 100%; max-width: 480px; margin: 0 auto; border-radius: 24px 24px 0 0; padding: 20px; max-height: 88vh; overflow: auto; }
+
+.empty { text-align: center; color: #8a6b75; padding: 50px 0; }
+button.red { background: #7a1f1f; }
+.hm-head { margin: -16px -16px 0; padding: 14px 20px; background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; border-radius: 0 0 18px 18px; }
+.hm-head h2 { font-family: Georgia, serif; font-size: 20px; }
+.hm-head p { font-size: 12px; opacity: .85; margin-top: 2px; }
+.hm-head p:empty { display: none; }
+.bnav { padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); gap: 4px; box-shadow: 0 -4px 16px rgba(109,26,55,.08); }
+.bnav button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border-radius: 14px; font-size: 11px; }
+.bnav button.on { background: #f8e6ec; color: #b8325a; }
+.bnav svg { width: 22px; height: 22px; }
+.hm-head { display: flex; align-items: center; justify-content: space-between; }
+.hm-l { display: flex; align-items: center; gap: 10px; }
+#home-hi { font-size: 13px; background: rgba(255,255,255,.18); padding: 6px 12px; border-radius: 20px; }
+.pi { display: flex; align-items: center; justify-content: center; }
+.pi i { font-style: normal; font-family: Georgia, serif; font-size: 90px; color: #b8325a; }
+.hm-head { padding: 8px 16px; border-radius: 0 0 14px 14px; }
+.hm-head h2 { font-size: 17px; }
+.hm-head svg { width: 28px; height: 18px; }
+#home-hi { font-size: 12px; padding: 4px 10px; }
+.gridc { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.pc { position: relative; }
+.pc .pi { height: 320px; }
+.pc .pt { position: absolute; left: 0; right: 0; bottom: 0; padding: 44px 16px 14px; background: linear-gradient(transparent, rgba(0,0,0,.65)); }
+.pc b { color: #fff; font-size: 19px; }
+.bnav button[data-t="home"] { order: 1; }
+.bnav button[data-t="friends"] { order: 2; }
+.bnav button[data-t="chat"] { order: 3; }
+.bnav button[data-t="profile"] { order: 4; }
+.gridc { gap: 10px; }
+.pc .pr { display: flex; align-items: center; gap: 12px; padding: 10px; cursor: pointer; }
+.pc .pi { width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0; }
+.pc .pi i { font-size: 26px; }
+.pc .pt { position: static; padding: 0; background: none; }
+.pc b { color: #2b1a20; font-size: 16px; }
+.pb { display: flex; gap: 6px; padding: 0 10px 10px; }
+.pb button { margin: 0; padding: 7px 2px; font-size: 12px; border-radius: 8px; background: #f8e6ec; color: #b8325a; }
+.pb button.bk { background: #f3dcdc; color: #7a1f1f; }
+.gridc { gap: 14px; }
+.pc .pr { padding: 14px; gap: 14px; }
+.pc .pi { width: 84px; height: 84px; border-radius: 18px; }
+.pc .pi i { font-size: 36px; }
+.pc b { font-size: 18px; }
+.pb { padding: 0 14px 14px; gap: 8px; }
+.pb button { padding: 11px 2px; font-size: 13px; border-radius: 10px; }
+
+.noh .hm-head { display: none; }
+.pf-top { text-align: center; padding-top: 6px; }
+.pf-av { width: 112px; height: 112px; border-radius: 50%; margin: 0 auto; background: #e8dde1 center/cover no-repeat; border: 4px solid #fff; box-shadow: 0 4px 14px rgba(109,26,55,.25); display: flex; align-items: center; justify-content: center; font: 44px Georgia, serif; color: #b8325a; }
+.pf-n { font-family: Georgia, serif; font-size: 22px; margin-top: 10px; }
+.pf-s { color: #8a6b75; font-size: 13px; margin-top: 2px; }
+.pf-a { font-size: 13px; line-height: 1.45; margin: 8px 8px 0; color: #4a3a40; }
+.pf-card { background: #fff; border-radius: 16px; padding: 10px 12px 12px; margin-top: 10px; box-shadow: 0 2px 10px rgba(109,26,55,.08); }
+.pf-card h3 { font-size: 12px; color: #b8325a; margin-bottom: 8px; }
+.pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pf-it { background: #fbf1f4; border-radius: 10px; padding: 8px 10px; }
+.pf-it span { display: block; font-size: 11px; color: #8a6b75; }
+.pf-it b { font-size: 13px; word-break: break-word; }
+.sheet .pf-card { box-shadow: none; border: 1px solid #f0e6ea; }
+.lock-note { font-size: 12px; color: #8a6b75; text-align: center; margin-top: 8px; }
+.edit-btn { width: auto; display: block; margin: 16px auto 0; padding: 9px 26px; font-size: 14px; border-radius: 20px; }
+.edit-btn:disabled { background: #d9d2d4; color: #8f8589; cursor: not-allowed; }
+#t-profile { position: relative; }
+.gear { position: absolute; top: 4px; right: 0; width: 40px; height: 40px; margin: 0; padding: 9px; border-radius: 50%; background: #fff; color: #6d1a37; box-shadow: 0 2px 8px rgba(109,26,55,.15); z-index: 2; }
+.gear svg { width: 18px; height: 18px; }
+.gear { top: -6px; width: 34px; height: 34px; padding: 8px; }
+.na { color: #b9a3ab !important; font-weight: normal !important; font-style: italic; font-size: 13px; }
+.warn { background: #fff4e5; border: 1px solid #f3d9a8; color: #7a5a1a; border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-top: 16px; }
+.fr-h { font-size: 13px; color: #8a6b75; margin: 6px 4px -4px; align-self: flex-start; }
+
+#chatbox { position: fixed; inset: 0; z-index: 60; background: #fbf6f4; display: none; flex-direction: column; max-width: 480px; margin: 0 auto; }
+#chatbox.on { display: flex; }
+.ch-h { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; }
+.ch-h button { width: auto; margin: 0; background: none; padding: 2px 8px; font-size: 22px; }
+.ch-av { width: 36px; height: 36px; border-radius: 50%; background: #e8dde1 center/cover no-repeat; }
+#msgs { flex: 1; overflow-y: auto; padding: 14px 12px 10px; display: flex; flex-direction: column; gap: 7px; background-color: #fdf0f3; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 44s-11-6.5-11-14a6.5 6.5 0 0 1 11-4.5A6.5 6.5 0 0 1 43 30c0 7.5-11 14-11 14z' fill='%23b8325a' fill-opacity='.07'/%3E%3C/svg%3E"); }
+.m { align-self: flex-start; width: fit-content; max-width: 78%; padding: 8px 13px 5px; border-radius: 20px 20px 20px 5px; background: #fff; color: #3a1824; border: 1px solid #f4cbd8; font-size: 14.5px; line-height: 1.4; word-break: break-word; box-shadow: 0 3px 10px rgba(184,50,90,.12); animation: mIn .22s ease; }
+.m.me { align-self: flex-end; border: 0; border-radius: 20px 20px 5px 20px; background: linear-gradient(135deg, #e0457b, #b8325a 55%, #7a1f45); color: #fff; box-shadow: 0 4px 14px rgba(184,50,90,.4); }
+.m .tm { display: block; text-align: right; font-size: 10px; opacity: .65; margin-top: 2px; }
+.m:not(.me) .tm::before { content: "\2661  "; color: #e0457b; }
+.ck { margin-left: 4px; font-size: 12px; letter-spacing: -3px; color: #ffd1e0; }
+.ck.seen { color: #4fd1ff; opacity: 1; }
+@keyframes mIn { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+.ch-in { display: flex; align-items: center; gap: 8px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); background: #fff; border-top: 1px solid #eadde2; }
+.ch-in input { margin: 0; flex: 1; border: 0; background: #f6eef1; border-radius: 22px; padding: 11px 16px; font-size: 15px; outline: none; }
+.ch-in button { width: 42px; height: 42px; margin: 0; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: linear-gradient(160deg, #6d1a37, #b8325a); transition: transform .1s; }
+.ch-in button:active { transform: scale(.9); }
+.ch-in button svg { width: 20px; height: 20px; }
+button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.gridc { align-items: center; gap: 10px; }
+.pc { width: 88%; border-radius: 18px; }
+.pc .pr { padding: 10px 12px; gap: 12px; }
+.pc .pi { width: 52px; height: 52px; border-radius: 50%; }
+.pc .pi i { font-size: 22px; }
+.pc b { font-size: 16px; }
+.pb { padding: 0 12px 12px; gap: 6px; }
+.pb button { padding: 9px 2px; font-size: 12px; border-radius: 10px; background: #f8e6ec; color: #8a1f45; border: 1px solid #f0cfda; transition: transform .08s; }
+.pb button.pri { background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; border-color: transparent; }
+.pb button.bk { background: #fff; color: #6d1a37; border: 1px solid #6d1a37; }
+.pb button:active { transform: scale(.95); }
+.pb button:disabled { background: #f3eaed; color: #a58f97; border-color: #eadde2; opacity: 1; }
+#toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); background: #2b1a20; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 13px; z-index: 99; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 80%; text-align: center; }
+#toast.on { opacity: 1; }
+.hm-head { padding: 5px 14px; border-radius: 0 0 12px 12px; }
+.hm-head h2 { font-size: 15px; }
+.hm-head svg { width: 24px; height: 15px; }
+.hm-l { gap: 8px; }
+#home-hi { font-size: 11px; padding: 3px 9px; }
+.pc { width: 100%; }
+#setpage { position: fixed; inset: 0; z-index: 70; background: #fbf6f4; display: none; flex-direction: column; max-width: 480px; margin: 0 auto; }
+#setpage.on { display: flex; }
+#sp-body { flex: 1; overflow-y: auto; padding: 14px; }
+.sp-row { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 14px; padding: 15px 16px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(109,26,55,.08); font-size: 15px; color: #2b1a20; text-decoration: none; cursor: pointer; }
+.sp-row.red { color: #7a1f1f; }
+.sp-bu { display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(109,26,55,.08); }
+.sp-bu .pi { width: 48px; height: 48px; border-radius: 50%; background: #e8dde1 center/cover no-repeat; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sp-bu .pi i { font-size: 20px; }
+.sp-bu .pt { flex: 1; }
+.sp-bu button { width: auto; margin: 0; padding: 8px 16px; font-size: 13px; border-radius: 10px; }
+.hw-intro { background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; border-radius: 16px; padding: 16px; margin-bottom: 4px; }
+.hw-intro h2 { font-family: Georgia, serif; font-size: 20px; margin-bottom: 6px; }
+.hw-intro p { font-size: 13px; line-height: 1.5; opacity: .92; }
+.hw-card { background: #fff; border-radius: 16px; padding: 14px 14px 6px; margin-top: 12px; box-shadow: 0 2px 10px rgba(109,26,55,.08); }
+.hw-card h3 { font-size: 14px; color: #b8325a; margin-bottom: 10px; }
+.hw-step { display: flex; gap: 12px; margin-bottom: 12px; }
+.hw-n { width: 24px; height: 24px; border-radius: 50%; background: #f8e6ec; color: #b8325a; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.hw-t { font-size: 13px; line-height: 1.5; color: #4a3a40; }
+.hw-t b { color: #2b1a20; }
+.hw-it { margin-bottom: 12px; font-size: 13px; line-height: 1.5; color: #4a3a40; }
+.hw-it b { display: block; color: #2b1a20; margin-bottom: 2px; }
+.hw-note { background: #fff4e5; border: 1px solid #f3d9a8; color: #7a5a1a; border-radius: 10px; padding: 9px 11px; font-size: 12px; line-height: 1.45; margin-bottom: 12px; }
+#maint { position: fixed; inset: 0; z-index: 95; background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+#maint h1 { font-family: Georgia, serif; font-size: 32px; margin: 18px 0 8px; }
+#maint p { opacity: .9; line-height: 1.5; }
+.ps { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #8a6b75; margin-top: 3px; }
+.ps i { width: 9px; height: 9px; border-radius: 50%; background: #d33; display: inline-block; }
+.ps.on i { background: #2ecc71; box-shadow: 0 0 0 3px rgba(46,204,113,.25); }
+.flt { display: flex; width: fit-content; margin: 12px auto 0; padding: 4px; gap: 2px; background: #fff; border-radius: 22px; box-shadow: 0 2px 10px rgba(109,26,55,.12); position: relative; }
+.flt button { width: auto; margin: 0; padding: 7px 16px; font-size: 13px; border-radius: 18px; background: none; color: #8a6b75; position: relative; z-index: 1; transition: color .25s; }
+.flt button.on { color: #fff; }
+.flt-bg { position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 18px; background: linear-gradient(160deg, #6d1a37, #b8325a); transition: transform .3s cubic-bezier(.4,0,.2,1), width .3s; z-index: 0; }
+.vt { width: 16px; height: 16px; vertical-align: -2px; margin-left: 5px; display: inline-block; }
+#admin { padding: 16px 0 40px; }
+.ad-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.ad-h b { font-family: Georgia, serif; font-size: 20px; color: #6d1a37; }
+.ad-h div { display: flex; gap: 6px; }
+.ad-h button { width: auto; margin: 0; padding: 7px 12px; font-size: 12px; }
+.ad-g { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ad-c { background: #fff; border-radius: 14px; padding: 12px; box-shadow: 0 2px 10px rgba(109,26,55,.08); }
+.ad-c span { display: block; font-size: 12px; color: #8a6b75; }
+.ad-c b { font-size: 24px; color: #b8325a; }
+.ad-t { font-size: 14px; font-weight: bold; color: #b8325a; margin: 18px 0 8px; }
+.ad-r { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
+.ad-r div { flex: 1; word-break: break-word; }
+.ad-r button { width: auto; margin: 0; padding: 6px 12px; font-size: 12px; }
+</style>
+</head>
+<body>
+  <div id="splash">
+    <svg class="rings" width="90" height="60" viewBox="0 0 90 60" fill="none" stroke="#fff" stroke-width="5">
+      <circle cx="33" cy="30" r="22"/><circle cx="57" cy="30" r="22"/>
+    </svg>
+    <h1>Rishta</h1>
+    <p>Find the right match</p>
+  </div>
+
+  <div id="login" style="display:none">
+    <svg width="90" height="60" viewBox="0 0 90 60" fill="none" stroke="#fff" stroke-width="5">
+      <circle cx="33" cy="30" r="22"/><circle cx="57" cy="30" r="22"/>
+    </svg>
+    <h1>Rishta</h1>
+    <p>Create your profile, meet people you like<br>and chat with respect</p>
+    <button class="gbtn" onclick="loginGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <small>By continuing, you agree to our terms</small>
+  </div>
+
+  <div id="setup" style="display:none">
+    <div class="su-head">
+      <h2>Create your profile</h2>
+      <p id="su-label">Step 1 of 4: Basic details</p>
+      <div class="su-bar"><i id="su-fill"></i></div>
+    </div>
+
+    <div class="su-step on" data-s="1">
+      <label>I am
+        <div class="seg" id="seg-g">
+          <div data-g="Male" onclick="pickGender('Male')">Male</div>
+          <div data-g="Female" onclick="pickGender('Female')">Female</div>
+        </div>
+      </label>
+      <label>Full name<input id="s-name"></label>
+      <div class="two">
+        <label>Age<input id="s-age" type="number" min="18" max="80"></label>
+        <label>Height<input id="s-height" placeholder="5'8&quot;"></label>
+      </div>
+      <label>Marital status
+        <select id="s-mar"><option value="">Select</option><option>Single</option><option>Divorced</option><option>Widowed</option></select>
+      </label>
+      <label>City<input id="s-city"></label>
+      <label>Country
+        <select id="s-country"><option value="">Select</option><option>Pakistan</option><option>UAE</option><option>Saudi Arabia</option><option>UK</option><option>USA</option><option>Canada</option><option>Other</option></select>
+      </label>
+      <label>Mother tongue
+        <select id="s-lang"><option value="">Select</option><option>Urdu</option><option>Punjabi</option><option>Saraiki</option><option>Sindhi</option><option>Pashto</option><option>Balochi</option><option>Other</option></select>
+      </label>
+      <label>Complexion
+        <select id="s-comp"><option value="">Select</option><option>Fair</option><option>Wheatish</option><option>Dark</option></select>
+      </label>
+      <label>Children
+        <select id="s-kids"><option value="">Select</option><option>No children</option><option>1 child</option><option>2 children</option><option>3 or more</option></select>
+      </label>
+    </div>
+
+    <div class="su-step" data-s="2">
+      <label>Sect
+        <select id="s-sect"><option value="">Select</option><option>Sunni</option><option>Shia</option><option>Ahle Hadith</option><option>Other</option></select>
+      </label>
+      <label>Caste / Family name<input id="s-caste"></label>
+      <label>Education
+        <select id="s-edu"><option value="">Select</option><option>Matric</option><option>Intermediate</option><option>Bachelors</option><option>Masters</option><option>MPhil / PhD</option><option>Other</option></select>
+      </label>
+      <label>Occupation<input id="s-job"></label>
+      <label>Monthly income<input id="s-income" placeholder="e.g. 80,000 PKR"></label>
+      <label>Prayer
+        <select id="s-pray"><option value="">Select</option><option>Regular</option><option>Sometimes</option><option>Rarely</option></select>
+      </label>
+      <label>Hijab / Beard
+        <select id="s-cover"><option value="">Select</option><option>Yes</option><option>Sometimes</option><option>No</option></select>
+      </label>
+      <label>Smoking
+        <select id="s-smoke"><option value="">Select</option><option>No</option><option>Yes</option></select>
+      </label>
+    </div>
+
+    <div class="su-step" data-s="3">
+      <label>Family type
+        <select id="s-ftype"><option value="">Select</option><option>Joint</option><option>Nuclear</option></select>
+      </label>
+      <label>Father's occupation<input id="s-fjob"></label>
+      <label>Brothers and sisters<input id="s-sib" placeholder="e.g. 2 brothers, 1 sister"></label>
+      <label>Mother's occupation<input id="s-mjob" placeholder="e.g. Housewife"></label>
+      <label>Family status
+        <select id="s-fstat"><option value="">Select</option><option>Middle class</option><option>Upper middle class</option><option>Upper class</option></select>
+      </label>
+      <label>House
+        <select id="s-house"><option value="">Select</option><option>Own house</option><option>Rented</option><option>Family house</option></select>
+      </label>
+    </div>
+
+    <div class="su-step" data-s="4">
+      <label>About me<textarea id="s-about" rows="3"></textarea></label>
+      <div class="two">
+        <label>Partner age from<input id="p-min" type="number" min="18"></label>
+        <label>to<input id="p-max" type="number" min="18"></label>
+      </div>
+      <label>Partner city<input id="p-city"></label>
+      <label>Partner marital status
+        <select id="p-mar"><option value="">Any</option><option>Single</option><option>Divorced</option><option>Widowed</option></select>
+      </label>
+      <label>Partner sect
+        <select id="p-sect"><option value="">Any</option><option>Sunni</option><option>Shia</option><option>Ahle Hadith</option><option>Other</option></select>
+      </label>
+      <label>Partner education
+        <select id="p-edu"><option value="">Any</option><option>Matric</option><option>Intermediate</option><option>Bachelors</option><option>Masters</option><option>MPhil / PhD</option></select>
+      </label>
+      <label>Ready to move abroad / another city
+        <select id="p-reloc"><option value="">Select</option><option>Yes</option><option>Maybe</option><option>No</option></select>
+      </label>
+      <label>Other partner wishes<textarea id="p-notes" rows="2"></textarea></label>
+      <label>Profile photo
+        <div class="ph-wrap">
+          <div id="ph-img">No photo</div>
+          <button type="button" id="ph-btn" class="alt" onclick="document.getElementById('ph-file').click()">Choose photo</button>
+        </div>
+      </label>
+      <input type="file" id="ph-file" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+      <input type="hidden" id="s-photo">
+      <div class="warn">Please check your details carefully. After you save, you can edit your profile again only after 30 days.</div>
+    </div>
+
+    <div class="su-nav">
+      <button class="alt" id="su-back" onclick="stepBack()">Back</button>
+      <button id="su-next" onclick="stepNext()">Next</button>
+    </div>
+  </div>
+
+  <div id="home" style="display:none">
+    <div class="hm-head">
+      <div class="hm-l">
+        <svg width="34" height="22" viewBox="0 0 90 60" fill="none" stroke="#fff" stroke-width="7"><circle cx="33" cy="30" r="22"/><circle cx="57" cy="30" r="22"/></svg>
+        <div>
+          <h2 id="home-title">Rishta</h2>
+          <p id="home-sub"></p>
+        </div>
+      </div>
+      <span id="home-hi"></span>
+    </div>
+
+    <div class="tab on" id="t-home">
+      <div class="flt" id="flt">
+        <span class="flt-bg" id="flt-bg"></span>
+        <button class="on" data-g="All" onclick="setView2('All')">All</button>
+        <button data-g="Female" onclick="setView2('Female')">Girls</button>
+        <button data-g="Male" onclick="setView2('Male')">Boys</button>
+      </div>
+      <div class="gridc" id="cards"></div>
+    </div>
+
+    <div class="tab" id="t-profile">
+      <button class="gear" onclick="openSettings()" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+      <div id="myprof" style="margin-top:16px"></div>
+      <button class="edit-btn" id="edit-btn" onclick="editProfile()">Edit profile</button>
+      <div class="lock-note" id="lock-note"></div>
+    </div>
+
+    <div class="tab" id="t-chat"><div class="gridc" id="chats"></div></div>
+
+    <div id="chatbox">
+      <div class="ch-h">
+        <button onclick="closeChat()">&#8592;</button>
+        <div class="ch-av" id="ch-av"></div>
+        <b id="ch-name"></b>
+        <button onclick="unfriend()" style="margin-left:auto;font-size:13px;border:1px solid rgba(255,255,255,.6);border-radius:14px;padding:5px 12px">Unfriend</button>
+      </div>
+      <div id="msgs"></div>
+      <div class="ch-in">
+        <input id="msg-in" placeholder="Type a message" onkeydown="if(event.key==='Enter')sendMsg()">
+        <button onclick="sendMsg()" aria-label="Send"><svg viewBox="0 0 24 24" fill="#fff"><path d="M3 20.5v-6.8l11-1.7-11-1.7V3.5L22 12z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="tab" id="t-friends"><div class="gridc" id="friends"></div></div>
+
+    <div class="bnav">
+      <button class="on" data-t="home" onclick="go('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+        Home
+      </button>
+      <button data-t="profile" onclick="go('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        Profile
+      </button>
+      <button data-t="chat" onclick="go('chat')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg>
+        Chat
+      </button>
+      <button data-t="friends" onclick="go('friends')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 15c2.5.5 4 2 4 5"/></svg>
+        Friends
+      </button>
+    </div>
+
+    <div class="sheet-bg" id="sheet" onclick="if(event.target===this)closeSheet()">
+      <div class="sheet" id="sheet-body"></div>
+    </div>
+  </div>
+
+<div id="maint" style="display:none">
+  <svg onclick="maintTap()" width="90" height="60" viewBox="0 0 90 60" fill="none" stroke="#fff" stroke-width="5"><circle cx="33" cy="30" r="22"/><circle cx="57" cy="30" r="22"/></svg>
+  <h1>Under Maintenance</h1>
+  <p>We are making Rishta better.<br>Please come back soon.</p>
+</div>
+<div id="admin" style="display:none"></div>
+<script>
+const SUPABASE_URL = "https://vwknokimnhsuajwbzudw.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3a25va2ltbmhzdWFqd2J6dWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwMzA3MTksImV4cCI6MjEwNjYwNjcxOX0.AzK-bCuypbkcJe2L3eAbXhC9Gxig22wsU7Yohp1Yn8g";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let me = null;
+const ADMIN_EMAIL = "lartkapagal@gmail.com";
+let maintOn = false, mtap = 0, mtapT;
+
+function showMaint() {
+  ["login", "setup", "home"].forEach(i => $(i).style.display = "none");
+  $("maint").style.display = "flex";
+}
+
+function maintTap() {
+  mtap++;
+  clearTimeout(mtapT);
+  mtapT = setTimeout(() => { mtap = 0; }, 1500);
+  if (mtap >= 5) { mtap = 0; loginGoogle(); }
+}
+
+async function toggleMaint() {
+  const { error } = await sb.rpc("admin_set_maintenance", { on_off: !maintOn });
+  if (error) { alert("Failed: " + error.message); return; }
+  maintOn = !maintOn;
+  adminOpen();
+}
+
+
+let vid = "na";
+try {
+  vid = localStorage.getItem("vid");
+  if (!vid) { vid = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("vid", vid); }
+  if (!sessionStorage.getItem("vs") && localStorage.getItem("adm") !== "1") {
+    sessionStorage.setItem("vs", "1");
+    sb.from("visits").insert({ visitor: vid }).then(() => {});
+  }
+} catch (e) {}
+
+async function adminOpen() {
+  const { data, error } = await sb.rpc("admin_data");
+  if (error) { alert("Admin error: " + error.message); try { localStorage.removeItem("adm"); } catch (e) {} return false; }
+  renderAdmin(data);
+  return true;
+}
+
+function adminExit() {
+  try { localStorage.removeItem("adm"); } catch (e) {}
+  location.href = location.pathname;
+}
+
+async function adminDel(id) {
+  if (!confirm("Permanently delete this user and all data?")) return;
+  const { error } = await sb.rpc("admin_delete_user", { uid: id });
+  if (error) { alert("Failed: " + error.message); return; }
+  adminOpen();
+}
+
+function renderAdmin(d) {
+  ["login", "setup", "home"].forEach(i => $(i).style.display = "none");
+  const users = d.users || [], reports = d.reports || [], support = d.support || [];
+  const nm = {};
+  users.forEach(u => nm[u.id] = u.name);
+  const who = i => esc(nm[i] || String(i).slice(0, 8));
+  const st = [["Total visits", d.visits], ["Unique visitors", d.unique_visitors], ["Accounts created", d.accounts],
+    ["Profiles completed", d.profiles_done], ["Male joined", d.male], ["Female joined", d.female],
+    ["Requests sent", d.requests], ["Requests accepted", d.accepted],
+    ["Online now", d.online_now], ["Active today", d.active_today],
+    ["Active last 7 days", d.active_7d], ["Users with streak", d.streak_users],
+    ["Streak done today (5/5)", d.done_today]];
+  const box = $("admin");
+  box.style.display = "block";
+  box.innerHTML =
+    '<div class="ad-h"><b>Admin panel</b><div><button onclick="adminOpen()">Refresh</button><button class="alt" onclick="adminExit()">Exit</button></div></div>' +
+    '<div class="ad-r"><div><b>Maintenance mode: ' + (maintOn ? 'ON' : 'OFF') + '</b></div><button class="' + (maintOn ? '' : 'red') + '" onclick="toggleMaint()">' + (maintOn ? 'Turn OFF' : 'Turn ON') + '</button></div>' +
+    '<div class="ad-g">' + st.map(x => '<div class="ad-c"><span>' + x[0] + '</span><b>' + x[1] + '</b></div>').join("") + '</div>' +
+    '<div class="ad-t">Top streaks</div>' +
+    ((d.top || []).map(t => '<div class="ad-r"><div><b>' + esc(t.name) + '</b><br>🔥 ' + t.streak + ' days · last seen ' + agoT(t.last_seen) + '</div></div>').join("") || '<div class="empty">No streaks yet.</div>') +
+    '<div class="ad-t">Users (' + users.length + ')</div>' +
+    users.map(u => '<div class="ad-r"><div><b>' + esc(u.name) + '</b><br>' + esc([u.gender, u.age, u.city].filter(Boolean).join(" · ")) + (u.complete ? '' : ' · incomplete') + '</div><button class="red" onclick="adminDel(\'' + u.id + '\')">Delete</button></div>').join("") +
+    '<div class="ad-t">Reports (' + reports.length + ')</div>' +
+    (reports.map(r => '<div class="ad-r"><div><b>' + who(r.reporter_id) + '</b> reported <b>' + who(r.reported_id) + '</b><br>' + esc(r.reason) + '</div>' +
+      '<button class="red" onclick="adminDel(\'' + r.reported_id + '\')">Delete user</button></div>').join("") || '<div class="empty">No reports.</div>') +
+    '<div class="ad-t">Support messages (' + support.length + ')</div>' +
+    (support.map(s => '<div class="ad-r"><div><b>' + who(s.user_id) + '</b><br>' + esc(s.message) + '</div></div>').join("") || '<div class="empty">No messages.</div>');
+  window.scrollTo(0, 0);
+}
+
+async function loginGoogle() {
+  await sb.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: location.origin + location.pathname }
+  });
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+const CLOUD_NAME = "niucifyi";
+const CLOUD_PRESET = "rishta_photos";
+let gender = "", step = 1, myProfile = null;
+
+function showPhoto(url) {
+  $("ph-img").style.backgroundImage = url ? "url('" + url + "')" : "";
+  $("ph-img").textContent = url ? "" : "No photo";
+  $("ph-btn").textContent = url ? "Change photo" : "Choose photo";
+}
+
+async function uploadPhoto(input) {
+  const f = input.files[0];
+  input.value = "";
+  if (!f) return;
+  if (f.size > 5 * 1024 * 1024) { alert("Photo must be under 5 MB."); return; }
+  $("ph-btn").textContent = "Uploading...";
+  const fd = new FormData();
+  fd.append("file", f);
+  fd.append("upload_preset", CLOUD_PRESET);
+  try {
+    const r = await fetch("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/image/upload", { method: "POST", body: fd });
+    const j = await r.json();
+    if (!j.secure_url) throw new Error((j.error && j.error.message) || "Upload failed");
+    const url = j.secure_url.replace("/upload/", "/upload/c_fill,g_face,w_600,h_600,q_auto,f_auto/");
+    $("s-photo").value = url;
+    showPhoto(url);
+  } catch (e) {
+    alert("Upload failed: " + e.message);
+    showPhoto($("s-photo").value);
+  }
+}
+const stepNames = ["Basic details", "Religion and career", "Family", "Partner and about you"];
+const fields = {
+  name: "s-name", age: "s-age", height: "s-height", marital: "s-mar", city: "s-city",
+  religion: "s-sect", caste: "s-caste", education: "s-edu", job: "s-job", income: "s-income",
+  family_type: "s-ftype", father_job: "s-fjob", siblings: "s-sib",
+  about: "s-about", pref_age_min: "p-min", pref_age_max: "p-max", pref_city: "p-city",
+  pref_notes: "p-notes", photo: "s-photo",
+  country: "s-country", language: "s-lang", complexion: "s-comp", children: "s-kids",
+  prayer: "s-pray", covering: "s-cover", smoking: "s-smoke",
+  mother_job: "s-mjob", family_status: "s-fstat", house: "s-house",
+  pref_marital: "p-mar", pref_sect: "p-sect", pref_edu: "p-edu", relocate: "p-reloc"
+};
+
+function pickGender(g) {
+  gender = g;
+  document.querySelectorAll("#seg-g div").forEach(d => d.classList.toggle("on", d.dataset.g === g));
+}
+
+function showStep(n) {
+  step = n;
+  document.querySelectorAll(".su-step").forEach(s => s.classList.toggle("on", Number(s.dataset.s) === n));
+  $("su-label").textContent = "Step " + n + " of 4: " + stepNames[n - 1];
+  $("su-fill").style.width = (n * 25) + "%";
+  $("su-back").style.display = (n === 1 && !(myProfile && myProfile.complete)) ? "none" : "block";
+  $("su-back").textContent = n === 1 ? "Cancel" : "Back";
+  $("su-next").textContent = n === 4 ? "Save profile" : "Next";
+  window.scrollTo(0, 0);
+}
+
+function valid(n) {
+  if (n === 1) {
+    if (!gender) return alert("Please choose Male or Female."), false;
+    if (!$("s-name").value.trim()) return alert("Please enter your name."), false;
+    if (Number($("s-age").value) < 18) return alert("Age must be 18 or above."), false;
+    if (!$("s-mar").value) return alert("Please choose marital status."), false;
+    if (!$("s-city").value.trim()) return alert("Please enter your city."), false;
+    if (!$("s-country").value) return alert("Please choose your country."), false;
+  }
+  if (n === 2) {
+    if (!$("s-sect").value) return alert("Please choose your sect."), false;
+    if (!$("s-edu").value) return alert("Please choose your education."), false;
+  }
+  if (n === 4) {
+    if (!$("s-photo").value) return alert("Please upload your profile photo."), false;
+  }
+  return true;
+}
+
+function stepNext() {
+  if (!valid(step)) return;
+  if (step < 4) showStep(step + 1); else saveProfile();
+}
+function stepBack() {
+  if (step > 1) { showStep(step - 1); return; }
+  if (myProfile && myProfile.complete) { showHome(myProfile, "profile"); }
+}
+
+function fillForm(d) {
+  if (d.gender) pickGender(d.gender);
+  for (const k in fields) $(fields[k]).value = d[k] ?? "";
+  showPhoto(d.photo || "");
+}
+
+function showSetup() {
+  $("login").style.display = "none";
+  $("home").style.display = "none";
+  $("setup").style.display = "block";
+  showStep(1);
+}
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let people = {};
+const vt = p => p && p.verified ? '<svg class="vt" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#1d9bf0"/><path d="M7 12.5l3.2 3.2L17 8.8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+const titles = {
+  home: ["Rishta", ""],
+  profile: ["Rishta", ""],
+  chat: ["Rishta", ""],
+  friends: ["Rishta", ""]
+};
+
+function showHome(d, tab) {
+  myProfile = d;
+  $("home-hi").textContent = hiText(d);
+  $("setup").style.display = "none";
+  $("home").style.display = "block";
+  go(tab || "home");
+}
+
+function go(t, fromPop) {
+  if (!fromPop && t !== "home" && !(history.state && history.state.tab === t)) history.pushState({ tab: t }, "");
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x.id === "t-" + t));
+  document.querySelectorAll(".bnav button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  $("home").classList.toggle("noh", t === "profile");
+  $("home-title").textContent = titles[t][0];
+  $("home-sub").textContent = titles[t][1];
+  window.scrollTo(0, 0);
+  if (t === "home") { loadCards(); setTimeout(moveFlt, 0); }
+  if (t === "profile") renderMine();
+  if (t === "friends") loadFriends();
+  if (t === "chat") loadChats();
+}
+
+function cardHTML(p) {
+  people[p.id] = p;
+  const bg = p.photo ? 'style="background-image:url(\'' + esc(p.photo) + '\')"' : "";
+  const i = p.id;
+  return '<div class="pc"><div class="pr" onclick="openProfile(\'' + i + '\')"><div class="pi" ' + bg + '>' + (p.photo ? '' : '<i>' + esc((p.name || '?')[0]) + '</i>') + '</div><div class="pt"><b>' + esc(p.name) + vt(p) + '</b><span class="ps" data-u="' + i + '"></span></div></div>' +
+    '<div class="pb">' + addBtn(i) + '<button onclick="msgUser(\'' + i + '\')">Message</button><button onclick="reportUser(\'' + i + '\')">Report</button><button class="bk" onclick="blockUser(\'' + i + '\',this)">Block</button></div></div>';
+}
+
+
+async function hiddenIds() {
+  const { data } = await sb.from("blocks").select("user_id,blocked_id")
+    .or("user_id.eq." + me.id + ",blocked_id.eq." + me.id);
+  return (data || []).map(b => b.user_id === me.id ? b.blocked_id : b.user_id);
+}
+
+async function loadCards() {
+  if (!$("cards").children.length) $("cards").innerHTML = '<div class="empty">Loading...</div>';
+  let q = sb.from("profiles").select("*").eq("complete", true).neq("id", me.id);
+  const [hide, reqs, res] = await Promise.all([hiddenIds(), myRequests(), q.order("name")]);
+  const rm = {};
+  reqs.forEach(r => { rm[r.sender_id === me.id ? r.receiver_id : r.sender_id] = r; });
+  reqMap = rm;
+  if (res.error) { $("cards").innerHTML = '<div class="empty">Could not load profiles.</div>'; return; }
+  const list = (res.data || []).filter(p => !hide.includes(p.id) && (viewG === "All" || p.gender === viewG) && !(rm[p.id] && rm[p.id].status === "accepted"));
+  $("cards").innerHTML = list.length ? list.map(cardHTML).join("") :
+    '<div class="empty">No profiles to show yet.</div>';
+  refreshDots();
+}
+
+let reqMap = {}, chatPeer = null;
+let viewG = "All";
+
+function moveFlt() {
+  const b = document.querySelector('#flt button[data-g="' + viewG + '"]');
+  if (!b) return;
+  document.querySelectorAll("#flt button").forEach(x => x.classList.toggle("on", x === b));
+  const bg = $("flt-bg");
+  bg.style.width = b.offsetWidth + "px";
+  bg.style.transform = "translateX(" + (b.offsetLeft - 4) + "px)";
+}
+
+function setView2(g) {
+  viewG = g;
+  moveFlt();
+  loadCards();
+}
+const DAY = 86400000;
+const av = p => '<div class="pi"' + (p.photo ? ' style="background-image:url(\'' + esc(p.photo) + '\')"></div>' : '><i>' + esc((p.name || '?')[0]) + '</i></div>');
+
+async function myRequests() {
+  const { data } = await sb.from("friend_requests").select("*")
+    .or("sender_id.eq." + me.id + ",receiver_id.eq." + me.id);
+  return (data || []).filter(r => r.status === "accepted" || Date.now() - new Date(r.created_at) < DAY);
+}
+
+function addBtn(i) {
+  const r = reqMap[i];
+  if (!r) return '<button class="pri" onclick="addFriend(\'' + i + '\',this)">Add</button>';
+  if (r.status === "accepted") return '<button disabled>Friends</button>';
+  return r.sender_id === me.id ? '<button disabled>Sent</button>' : '<button onclick="go(\'friends\')">Respond</button>';
+}
+
+function reqCard(p, r, incoming) {
+  people[p.id] = p;
+  const btns = incoming
+    ? '<button class="pri" onclick="answerReq(' + r.id + ',true)">Accept</button><button class="bk" onclick="answerReq(' + r.id + ',false)">Decline</button>'
+    : '<button disabled>Pending</button>';
+  return '<div class="pc"><div class="pr" onclick="openProfile(\'' + p.id + '\')">' + av(p) + '<div class="pt"><b>' + esc(p.name) + '</b></div></div><div class="pb">' + btns + '</div></div>';
+}
+
+async function loadFriends() {
+  const pend = (await myRequests()).filter(r => r.status === "pending");
+  const ids = pend.map(r => r.sender_id === me.id ? r.receiver_id : r.sender_id);
+  let html = "";
+  if (ids.length) {
+    const { data } = await sb.from("profiles").select("*").in("id", ids);
+    const by = {};
+    (data || []).forEach(p => by[p.id] = p);
+    const part = inc => pend.filter(r => (r.receiver_id === me.id) === inc && by[inc ? r.sender_id : r.receiver_id])
+      .map(r => reqCard(by[inc ? r.sender_id : r.receiver_id], r, inc)).join("");
+    const a = part(true), b = part(false);
+    html = (a ? '<div class="fr-h">Requests for you</div>' + a : '') + (b ? '<div class="fr-h">Sent by you</div>' + b : '');
+  }
+  $("friends").innerHTML = html || '<div class="empty">No friend requests right now.</div>';
+}
+
+async function answerReq(id, ok) {
+  const q = ok ? sb.from("friend_requests").update({ status: "accepted" }).eq("id", id).select()
+               : sb.from("friend_requests").delete().eq("id", id).select();
+  const { data, error } = await q;
+  if (error || !data.length) { alert("This request is no longer available."); loadFriends(); return; }
+  if (ok) { alert("Accepted. You can now chat from the Chat tab."); go("chat"); } else loadFriends();
+}
+
+async function loadChats() {
+  const acc = (await myRequests()).filter(r => r.status === "accepted");
+  const hide = await hiddenIds();
+  const ids = acc.map(r => r.sender_id === me.id ? r.receiver_id : r.sender_id).filter(x => !hide.includes(x));
+  let html = "";
+  if (ids.length) {
+    const { data } = await sb.from("profiles").select("*").in("id", ids);
+    html = (data || []).map(p => { people[p.id] = p;
+      return '<div class="pc"><div class="pr" onclick="openChat(\'' + p.id + '\')">' + av(p) + '<div class="pt"><b>' + esc(p.name) + '</b></div></div></div>'; }).join("");
+  }
+  $("chats").innerHTML = html || '<div class="empty">No chats yet. A chat opens when a friend request is accepted.</div>';
+}
+
+async function openChat(id) {
+  const p = people[id];
+  if (!p) return;
+  chatPeer = p;
+  $("ch-name").innerHTML = esc(p.name) + vt(p);
+  $("ch-av").style.backgroundImage = p.photo ? "url('" + p.photo + "')" : "";
+  $("msgs").innerHTML = "";
+  history.pushState({ chat: 1 }, "");
+  $("chatbox").classList.add("on");
+  const { data } = await sb.from("messages").select("*")
+    .or("and(sender_id.eq." + me.id + ",receiver_id.eq." + id + "),and(sender_id.eq." + id + ",receiver_id.eq." + me.id + ")")
+    .order("created_at");
+  (data || []).forEach(addMsg);
+  markSeen(id);
+}
+
+const msgEls = {};
+
+async function unfriend() {
+  if (!chatPeer) return;
+  const id = chatPeer.id, name = chatPeer.name;
+  if (!confirm("Unfriend " + name + "?\n\nThe chat will be deleted for both of you. You can add each other again later.")) return;
+  const { error } = await sb.rpc("unfriend", { pid: id });
+  if (error) { toast("Could not unfriend."); return; }
+  delete reqMap[id];
+  closeChat();
+  loadChats();
+  toast("Unfriended.");
+}
+
+function paintTick(el, m) {
+  el.className = "ck" + (m.seen_at ? " seen" : "");
+  el.textContent = (m.seen_at || m.delivered_at) ? "\u2713\u2713" : "\u2713";
+}
+
+async function markDelivered() {
+  await sb.from("messages").update({ delivered_at: new Date().toISOString() })
+    .eq("receiver_id", me.id).is("delivered_at", null);
+}
+
+async function markSeen(pid) {
+  const t = new Date().toISOString();
+  await sb.from("messages").update({ seen_at: t, delivered_at: t })
+    .eq("receiver_id", me.id).eq("sender_id", pid).is("seen_at", null);
+}
+
+function closeChat() {
+  if (history.state && history.state.chat) history.back();
+  else { $("chatbox").classList.remove("on"); chatPeer = null; }
+}
+
+function addMsg(m) {
+  const d = document.createElement("div");
+  d.className = "m" + (m.sender_id === me.id ? " me" : "");
+  const tx = document.createElement("span");
+  tx.textContent = m.body;
+  const tm = document.createElement("span");
+  tm.className = "tm";
+  tm.textContent = new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  d.appendChild(tx);
+  d.appendChild(tm);
+  if (m.sender_id === me.id) {
+    const ck = document.createElement("span");
+    tm.appendChild(ck);
+    paintTick(ck, m);
+    msgEls[m.id] = ck;
+  }
+  $("msgs").appendChild(d);
+  $("msgs").scrollTop = $("msgs").scrollHeight;
+}
+
+async function sendMsg() {
+  const body = $("msg-in").value.trim();
+  if (!body || !chatPeer) return;
+  $("msg-in").value = "";
+  const { data, error } = await sb.from("messages").insert({ sender_id: me.id, receiver_id: chatPeer.id, body: body }).select().single();
+  if (error) { $("msg-in").value = body; alert("Message not sent."); return; }
+  addMsg(data);
+}
+
+function profileHTML(p) {
+  const card = (t, rows) => {
+    const h = rows.map(x => '<div class="pf-it"><span>' + x[0] + '</span>' + (x[1] ? '<b>' + esc(x[1]) + '</b>' : '<b class="na">Not added</b>') + '</div>').join("");
+    return '<div class="pf-card"><h3>' + t + '</h3><div class="pf-grid">' + h + '</div></div>';
+  };
+  const av = '<div class="pf-av"' + (p.photo ? ' style="background-image:url(\'' + esc(p.photo) + '\')"' : '') + '>' + (p.photo ? '' : esc((p.name || '?')[0])) + '</div>';
+  return '<div class="pf-top">' + av + '<div class="pf-n">' + esc(p.name) + vt(p) + '</div>' + (p.verified ? '<div class="pf-s">Verified Owner</div>' : '') + '</div>' +
+    card("Basic", [["Age", p.age], ["Height", p.height], ["Status", p.marital], ["Children", p.children], ["City", p.city], ["Country", p.country], ["Mother tongue", p.language], ["Complexion", p.complexion]]) +
+    '<div class="pf-card"><h3>About</h3>' + (p.about ? '<p class="pf-a" style="margin:0;text-align:left">' + esc(p.about) + '</p>' : '<p class="na" style="margin:0">Not added</p>') + '</div>' +
+    card("Religion and career", [["Sect", p.religion], ["Caste", p.caste], ["Prayer", p.prayer], ["Hijab / Beard", p.covering], ["Smoking", p.smoking], ["Education", p.education], ["Job", p.job], ["Income", p.income]]) +
+    card("Family", [["Type", p.family_type], ["Status", p.family_status], ["House", p.house], ["Father", p.father_job], ["Mother", p.mother_job], ["Siblings", p.siblings]]) +
+    card("Partner wishes", [["Age", (p.pref_age_min && p.pref_age_max) ? p.pref_age_min + " to " + p.pref_age_max : ""], ["City", p.pref_city], ["Marital status", p.pref_marital], ["Sect", p.pref_sect], ["Education", p.pref_edu], ["Move abroad / city", p.relocate], ["Other", p.pref_notes]]);
+}
+
+
+function renderMine() {
+  $("myprof").innerHTML = profileHTML(myProfile || {});
+  const d = daysLeft();
+  $("edit-btn").disabled = d > 0;
+  $("lock-note").textContent = d > 0
+    ? "You can edit again in " + d + " day" + (d > 1 ? "s" : "") + "."
+    : "You can edit your profile once every 30 days.";
+}
+
+function openProfile(id) {
+  const p = people[id];
+  if (!p) return;
+  $("sheet-body").innerHTML = profileHTML(p);
+  history.pushState({ sheet: 1 }, "");
+  $("sheet").classList.add("on");
+}
+
+function closeSheet() {
+  if (history.state && history.state.sheet) history.back();
+  else $("sheet").classList.remove("on");
+}
+
+window.addEventListener("popstate", () => {
+  const sp = document.getElementById("setpage");
+  if (sp && sp.classList.contains("on")) {
+    if (setView === "main") sp.classList.remove("on"); else showSetMain();
+    return;
+  }
+  if ($("chatbox").classList.contains("on")) { $("chatbox").classList.remove("on"); chatPeer = null; return; }
+  if ($("sheet").classList.contains("on")) { $("sheet").classList.remove("on"); return; }
+  if ($("home").style.display === "block") go("home", true);
+});
+
+let streakN = 0, todayN = 0;
+const pres = {};
+
+function hiText(d) {
+  const bd = streakN >= 100 ? " Gold" : streakN >= 30 ? " Silver" : streakN >= 7 ? " Bronze" : "";
+  return "Hi, " + ((d.name || "").split(" ")[0] || "there") + (streakN ? " · 🔥 " + streakN + bd : "") + (todayN < 5 ? " · " + todayN + "/5" : " · ✓");
+}
+
+async function pingMe() {
+  if (!me || document.hidden) return;
+  const { data } = await sb.rpc("ping");
+  if (data) { streakN = data.streak; todayN = data.today; if (myProfile) $("home-hi").textContent = hiText(myProfile); }
+}
+
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pingMe(); });
+
+function agoT(t) {
+  const m = Math.floor((Date.now() - new Date(t)) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return m + " min ago";
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + " hr ago";
+  return Math.floor(h / 24) + " day ago";
+}
+
+function paintDots() {
+  document.querySelectorAll(".ps[data-u]").forEach(e => {
+    const t = pres[e.dataset.u];
+    const on = t && Date.now() - new Date(t) < 120000;
+    e.className = "ps" + (on ? " on" : "");
+    e.innerHTML = "<i></i>" + (on ? "Online" : t ? "Offline · " + agoT(t) : "Offline");
+  });
+}
+
+async function refreshDots() {
+  const ids = [...new Set([...document.querySelectorAll(".ps[data-u]")].map(e => e.dataset.u))];
+  if (ids.length) {
+    const { data } = await sb.from("presence").select("user_id,last_seen").in("user_id", ids);
+    (data || []).forEach(r => { pres[r.user_id] = r.last_seen; });
+  }
+  paintDots();
+}
+
+function toast(msg) {
+  let t = document.getElementById("toast");
+  if (!t) { t = document.createElement("div"); t.id = "toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.className = "on";
+  clearTimeout(t._h);
+  t._h = setTimeout(() => { t.className = ""; }, 2200);
+}
+
+async function addFriend(id, btn) {
+  const ex = reqMap[id];
+  if (ex) { toast(ex.status === "accepted" ? "You are already friends." : ex.sender_id === me.id ? "Request already sent." : "This person already sent you a request. Check the Friends tab."); return; }
+  if (btn) { btn.disabled = true; btn.textContent = "Sent"; }
+  reqMap[id] = { sender_id: me.id, receiver_id: id, status: "pending", created_at: new Date().toISOString() };
+  const add = () => sb.from("friend_requests").insert({ sender_id: me.id, receiver_id: id }).select().single();
+  let res = await add();
+  if (res.error && res.error.code === "23505") {
+    await sb.from("friend_requests").delete().eq("sender_id", me.id).eq("receiver_id", id).eq("status", "pending");
+    res = await add();
+  }
+  if (res.error) {
+    delete reqMap[id];
+    if (btn) { btn.disabled = false; btn.textContent = "Add"; }
+    toast("Could not send the request.");
+    return;
+  }
+  reqMap[id] = res.data;
+  toast("Request sent. It stays open for 24 hours.");
+  pingMe();
+}
+
+function msgUser(id) {
+  const r = reqMap[id];
+  if (r && r.status === "accepted") openChat(id);
+  else toast("Message is available after your friend request is accepted.");
+}
+
+async function reportUser(id) {
+  const reason = prompt("Why are you reporting this profile?");
+  if (!reason) return;
+  const { error } = await sb.from("reports").insert({ reporter_id: me.id, reported_id: id, reason: reason });
+  toast(error ? "Could not send the report." : "Report sent. Thank you.");
+}
+
+async function blockUser(id, btn) {
+  if (!confirm("Block this person? You will not see each other.")) return;
+  const card = btn && btn.closest(".pc");
+  if (card) card.remove();
+  const { error } = await sb.from("blocks").insert({ user_id: me.id, blocked_id: id });
+  if (error) { toast("Could not block."); loadCards(); return; }
+  toast("Blocked.");
+}
+
+function daysLeft() {
+  if (me && (me.email || "").toLowerCase() === ADMIN_EMAIL) return 0;
+  if (!myProfile || !myProfile.last_edit) return 0;
+  const used = (Date.now() - new Date(myProfile.last_edit).getTime()) / 86400000;
+  return Math.max(0, Math.ceil(30 - used));
+}
+
+const WHATSAPP_CHANNEL = "https://whatsapp.com/channel/0029Vb9EkIC7oQhZJb1wVE17";
+const SUPPORT_EMAIL = "lartkapagal@gmail.com";
+let setView = "main";
+
+function ensureSet() {
+  let p = document.getElementById("setpage");
+  if (p) return p;
+  p = document.createElement("div");
+  p.id = "setpage";
+  p.innerHTML = '<div class="ch-h"><button onclick="history.back()">&#8592;</button><b id="sp-title"></b></div><div id="sp-body"></div>';
+  document.body.appendChild(p);
+  return p;
+}
+
+function openSettings() {
+  ensureSet().classList.add("on");
+  history.pushState({ set: 1 }, "");
+  showSetMain();
+}
+
+function showSetMain() {
+  setView = "main";
+  $("sp-title").textContent = "Settings";
+  $("sp-body").innerHTML =
+    '<div class="sp-row" onclick="showHowTo()"><span>How to use Rishta</span><span>&#8250;</span></div>' +
+    '<div class="sp-row" onclick="showBlocked()"><span>Blocked users</span><span>&#8250;</span></div>' +
+    '<div class="sp-row" onclick="showSupport()"><span>Support center</span><span>&#8250;</span></div>' +
+    '<div class="sp-row" onclick="logout()"><span>Log out</span><span>&#8250;</span></div>' +
+    '<div class="sp-row red" onclick="startDelete()"><span>Delete account</span><span>&#8250;</span></div>' +
+    (me && (me.email || "").toLowerCase() === "lartkapagal@gmail.com"
+      ? '<div class="sp-row" onclick="openAdmin()"><span>Admin</span><span>&#8250;</span></div>' : '');
+}
+
+function openAdmin() {
+  $("setpage").classList.remove("on");
+  adminOpen();
+}
+
+function showHowTo() {
+  history.pushState({ set: 2 }, "");
+  setView = "howto";
+  $("sp-title").textContent = "How to use Rishta";
+  const step = (n, t) => '<div class="hw-step"><div class="hw-n">' + n + '</div><div class="hw-t">' + t + '</div></div>';
+  const item = (t, d) => '<div class="hw-it"><b>' + t + '</b>' + d + '</div>';
+  const card = (t, body) => '<div class="hw-card"><h3>' + t + '</h3>' + body + '</div>';
+  $("sp-body").innerHTML =
+    '<div class="hw-intro"><h2>Welcome to Rishta</h2><p>Rishta helps you find a suitable match. Create a profile, discover people, send a friend request and chat privately once it is accepted.</p></div>' +
+
+    card("Getting started",
+      step(1, `<b>Sign in with Google.</b> No password is needed.`) +
+      step(2, `<b>Create your profile.</b> It takes 4 short steps and a profile photo is required.`) +
+      step(3, `<b>Browse Home.</b> You see all profiles. Use the All / Girls / Boys switch on top to see only girls or only boys.`) +
+      step(4, `<b>Send a friend request.</b> Tap Add on a profile you like.`) +
+      step(5, `<b>Start chatting.</b> When the request is accepted, the chat opens in the Chat tab.`)) +
+
+    card("What your profile asks",
+      item("Step 1: Basic details", `Male or Female, full name, age, height, marital status, children, city, country, mother tongue and complexion.`) +
+      item("Step 2: Religion and career", `Sect, caste or family name, prayer, hijab or beard, smoking, education, occupation and monthly income.`) +
+      item("Step 3: Family", `Family type (joint or nuclear), family status, house, father's and mother's occupation, brothers and sisters.`) +
+      item("Step 4: About and partner", `A few lines about you, partner age range, city, marital status, sect, education, willingness to move, other wishes, and your profile photo.`) +
+      `<div class="hw-note">Fields you leave empty show as "Not added" on your profile, so other people can see what you did not share.</div>`) +
+
+    card("Home screen",
+      item("View a profile", `Tap a person's photo or name to open the full profile.`) +
+      item("Add", `Sends a friend request.`) +
+      item("Message", `Opens the chat. It works only after the person accepts your request.`) +
+      item("Report", `Tell us what is wrong with a profile. Our team reviews every report.`) +
+      item("Block", `Hides the person from you and hides you from them.`)) +
+
+    card("Friend requests",
+      item("Sending", `After you tap Add, the button changes to Sent. The request stays open for 24 hours.`) +
+      item("Receiving", `Requests sent to you appear in the Friends tab. You can open the sender's profile before you decide.`) +
+      item("Accept", `The person moves from Friends to your Chat tab and both of you can send messages.`) +
+      item("Decline", `The request is removed at once.`) +
+      item("No answer", `If nobody answers within 24 hours, the request expires and disappears.`)) +
+
+    card("Daily streak",
+      item("How to earn", `Send friend requests to 5 different people in one day. The day changes at midnight Pakistan time.`) +
+      item("Counter", `The top bar shows your streak like "🔥 3 · 2/5". When you reach 5 requests it shows a tick.`) +
+      item("Miss a day", `If you do not complete 5 requests in a day, your streak starts again from 0.`) +
+      item("Badges", `7 days Bronze, 30 days Silver, 100 days Gold. The badge name shows next to your streak.`)) +
+
+    card("Online status",
+      item("Green dot", `The person is online right now.`) +
+      item("Red dot", `The person is offline. It shows how long ago they were last online.`)) +
+
+    card("Chat",
+      item("Where to find it", `The Chat tab lists everyone who accepted your request. Tap a name to open the conversation.`) +
+      item("Messages", `New messages arrive live while the chat is open. Please stay polite and respectful.`)) +
+
+    card("Editing your profile",
+      item("Once every 30 days", `You can edit your profile one time, then it is locked for 30 days.`) +
+      item("Edit button", `The Edit profile button turns grey during the lock and turns on again by itself when 30 days are over.`) +
+      `<div class="hw-note">Check your details carefully before you save, because you cannot change them again for 30 days.</div>`) +
+
+    card("Staying safe",
+      item("Blocking", `A blocked person cannot see you or message you. You can undo it any time in Settings, Blocked users, then Unblock. The person can then appear on your Home again.`) +
+      item("Reporting", `Use Report on any profile that looks fake, rude or unsafe. Never share money or private documents with someone you have just met online.`)) +
+
+    card("Your account",
+      item("Log out", `Go to Profile, tap the gear icon, then Log out. Your profile and chats stay saved.`) +
+      item("Delete account", `Go to Settings, then Delete account. You must confirm twice and write a reason. Your profile is hidden right away and all your data is permanently deleted after 15 days.`) +
+      item("Changed your mind?", `Log in within 15 days and choose to cancel the deletion. Your account comes back as it was.`)) +
+
+    card("Need help?",
+      item("Support center", `Open Settings, then Support center. You can message us there, email us or follow our WhatsApp channel.`));
+}
+
+function showBlocked() {
+  history.pushState({ set: 2 }, "");
+  setView = "blocked";
+  $("sp-title").textContent = "Blocked users";
+  loadBlocked();
+}
+
+async function loadBlocked() {
+  $("sp-body").innerHTML = '<div class="empty">Loading...</div>';
+  const { data: b } = await sb.from("blocks").select("blocked_id").eq("user_id", me.id);
+  const ids = (b || []).map(x => x.blocked_id);
+  let list = [];
+  if (ids.length) {
+    const { data } = await sb.from("profiles").select("id,name,photo").in("id", ids);
+    list = data || [];
+  }
+  $("sp-body").innerHTML = list.length
+    ? list.map(p => '<div class="sp-bu" id="bu-' + p.id + '">' + av(p) + '<div class="pt"><b>' + esc(p.name) + '</b></div><button class="pri" onclick="unblock(\'' + p.id + '\')">Unblock</button></div>').join("")
+    : '<div class="empty">You have not blocked anyone.</div>';
+}
+
+async function unblock(id) {
+  const row = document.getElementById("bu-" + id);
+  if (row) row.remove();
+  const { error } = await sb.from("blocks").delete().eq("user_id", me.id).eq("blocked_id", id);
+  if (error) { toast("Could not unblock."); loadBlocked(); return; }
+  toast("Unblocked. This person can appear on your Home again.");
+  if (!$("sp-body").querySelector(".sp-bu")) $("sp-body").innerHTML = '<div class="empty">You have not blocked anyone.</div>';
+}
+
+function showSupport() {
+  history.pushState({ set: 2 }, "");
+  setView = "support";
+  $("sp-title").textContent = "Support center";
+  $("sp-body").innerHTML =
+    '<a class="sp-row" href="' + WHATSAPP_CHANNEL + '" target="_blank" rel="noopener"><span>Our WhatsApp channel</span><span>&#8250;</span></a>' +
+    '<a class="sp-row" href="mailto:' + SUPPORT_EMAIL + '"><span>' + esc(SUPPORT_EMAIL) + '</span><span>&#8250;</span></a>' +
+    '<div class="pf-card"><h3>Need help? Send us a message</h3>' +
+    '<textarea id="sup-msg" rows="4" placeholder="Describe your problem"></textarea>' +
+    '<button onclick="sendSupport(this)">Send</button></div>';
+}
+
+async function sendSupport(btn) {
+  const msg = $("sup-msg").value.trim();
+  if (msg.length < 5) { toast("Please write your message."); return; }
+  btn.disabled = true;
+  const { error } = await sb.from("support_messages").insert({ user_id: me.id, message: msg });
+  btn.disabled = false;
+  if (error) { toast("Could not send. Please try again."); return; }
+  $("sup-msg").value = "";
+  toast("Message sent. Our team will review it.");
+}
+
+function startDelete() {
+  if (!confirm("Do you really want to delete your account?")) return;
+  if (!confirm("Final confirmation: your profile will be hidden now and all your data will be permanently deleted after 15 days. Continue?")) return;
+  history.pushState({ set: 2 }, "");
+  setView = "delete";
+  $("sp-title").textContent = "Delete account";
+  $("sp-body").innerHTML = '<div class="pf-card"><h3>Why are you leaving?</h3>' +
+    '<p class="pf-s" style="margin-bottom:8px">A reason is required to delete your account.</p>' +
+    '<textarea id="del-reason" rows="4" placeholder="Write your reason"></textarea>' +
+    '<button class="red" onclick="confirmDelete()">Delete my account</button>' +
+    '<button class="alt" onclick="history.back()">Cancel</button></div>';
+}
+
+
+async function confirmDelete() {
+  const reason = $("del-reason").value.trim();
+  if (reason.length < 5) { alert("Please write your reason."); return; }
+  const { error } = await sb.from("deletion_requests").insert({ user_id: me.id, reason: reason });
+  if (error) { alert("Could not send your request. Please try again."); return; }
+  await sb.auth.signOut();
+  alert("Your account is scheduled for deletion. All your data will be permanently deleted after 15 days. Log in within 15 days if you want to cancel.");
+  location.reload();
+}
+
+function editProfile() {
+  const d = daysLeft();
+  if (d > 0) { alert("You can edit your profile again in " + d + " day" + (d > 1 ? "s" : "") + "."); return; }
+  if (myProfile) fillForm(myProfile);
+  showSetup();
+}
+
+let saving = false;
+async function saveProfile() {
+  if (saving) return;
+  saving = true;
+  $("su-next").disabled = true;
+  const p = { id: me.id, gender: gender };
+  for (const k in fields) p[k] = $(fields[k]).value.trim();
+  p.age = Number(p.age) || null;
+  p.pref_age_min = Number(p.pref_age_min) || null;
+  p.pref_age_max = Number(p.pref_age_max) || null;
+  p.complete = true;
+  const { data, error } = await sb.from("profiles").upsert(p).select().single();
+  saving = false;
+  $("su-next").disabled = false;
+  if (error) { alert(/30 days/.test(error.message) ? "You can edit your profile only once every 30 days." : "Could not save: " + error.message); return; }
+  myProfile = data;
+  showHome(data, "profile");
+}
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  const { data: ms } = await sb.from("app_settings").select("value").eq("key", "maintenance").maybeSingle();
+  maintOn = !!ms && ms.value === "on";
+  const isAdm = !!session && (session.user.email || "").toLowerCase() === ADMIN_EMAIL;
+  if (maintOn && !isAdm) { showMaint(); return; }
+  if (!session) { $("login").style.display = "flex"; return; }
+  me = session.user;
+  history.replaceState({}, "", location.pathname);
+  pingMe();
+  setInterval(pingMe, 45000);
+  setInterval(() => { if (!document.hidden && $("home").style.display === "block") refreshDots(); }, 20000);
+
+  markDelivered();
+  sb.channel("inbox").on("postgres_changes",
+    { event: "INSERT", schema: "public", table: "messages", filter: "receiver_id=eq." + me.id },
+    pl => {
+      if (chatPeer && pl.new.sender_id === chatPeer.id && $("chatbox").classList.contains("on")) { addMsg(pl.new); markSeen(chatPeer.id); }
+      else markDelivered();
+    })
+  .on("postgres_changes",
+    { event: "UPDATE", schema: "public", table: "messages", filter: "sender_id=eq." + me.id },
+    pl => { const el = msgEls[pl.new.id]; if (el) paintTick(el, pl.new); })
+  .subscribe();
+  const { data: del } = await sb.from("deletion_requests").select("requested_at").eq("user_id", me.id).maybeSingle();
+  if (del) {
+    const when = new Date(new Date(del.requested_at).getTime() + 15 * 86400000).toLocaleDateString();
+    if (confirm("Your account is scheduled for deletion on " + when + ". Press OK to cancel the deletion and keep your account.")) {
+      await sb.from("deletion_requests").delete().eq("user_id", me.id);
+    } else {
+      await sb.auth.signOut();
+      location.reload();
+      return;
+    }
+  }
+  $("login").style.display = "none";
+  const { data } = await sb.from("profiles").select("*").eq("id", me.id).maybeSingle();
+  myProfile = data;
+  if (data && data.complete) {
+    showHome(data);
+  } else {
+    if (data) fillForm(data);
+    else $("s-name").value = (me.user_metadata && me.user_metadata.full_name) || "";
+    showSetup();
+  }
+}
+
+setTimeout(() => {
+  const s = document.getElementById("splash");
+  s.classList.add("hide");
+  setTimeout(() => s.remove(), 700);
+}, 1800);
+init();
+</script>
+</body>
+</html>
