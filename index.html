@@ -1393,10 +1393,12 @@ async function saveProfile() {
   showHome(data, "profile");
 }
 
-function askNotif() {
-  Notification.requestPermission().then(function (p) {
-    if (p === "granted") location.reload();
-  });
+async function askNotif() {
+  try {
+    await OneSignal.Notifications.requestPermission();
+    await OneSignal.User.PushSubscription.optIn();
+  } catch (e) {}
+  if (window.Notification && Notification.permission === "granted") setTimeout(function () { location.reload(); }, 1500);
 }
 
 function forceNotif() {
