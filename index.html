@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
 <title>Rishta</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
@@ -198,6 +198,14 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .flt button.on { color: #fff; }
 .flt-bg { position: absolute; top: 4px; bottom: 4px; left: 4px; border-radius: 18px; background: linear-gradient(160deg, #6d1a37, #b8325a); transition: transform .3s cubic-bezier(.4,0,.2,1), width .3s; z-index: 0; }
 .vt { width: 16px; height: 16px; vertical-align: -2px; margin-left: 5px; display: inline-block; }
+#dlg-bg { position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; padding: 24px; }
+#dlg-bg.on { display: flex; }
+#dlg { background: #fff; border-radius: 20px; padding: 22px 20px 16px; width: 100%; max-width: 340px; box-shadow: 0 10px 40px rgba(109,26,55,.35); animation: mIn .18s ease; }
+#dlg h3 { font-family: Georgia, serif; color: #6d1a37; font-size: 20px; margin-bottom: 8px; }
+#dlg p { font-size: 14px; line-height: 1.5; color: #4a3a40; white-space: pre-line; }
+#dlg input { margin-top: 12px; }
+#dlg .db { display: flex; gap: 8px; margin-top: 16px; }
+#dlg .db button { flex: 1; margin: 0; padding: 11px; font-size: 14px; border-radius: 12px; }
 #admin { padding: 16px 0 40px; }
 .ad-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .ad-h b { font-family: Georgia, serif; font-size: 20px; color: #6d1a37; }
@@ -430,6 +438,49 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 let me = null;
+
+if (window.visualViewport) {
+  const fit = () => {
+    const c = $("chatbox");
+    c.style.top = visualViewport.offsetTop + "px";
+    c.style.bottom = "auto";
+    c.style.height = visualViewport.height + "px";
+    $("msgs").scrollTop = $("msgs").scrollHeight;
+  };
+  visualViewport.addEventListener("resize", fit);
+  visualViewport.addEventListener("scroll", fit);
+}
+
+let dlgPrev = null;
+function dlg(msg, o) {
+  o = o || {};
+  return new Promise(res => {
+    if (dlgPrev) dlgPrev(o.input ? null : false);
+    let bg = $("dlg-bg");
+    if (!bg) { bg = document.createElement("div"); bg.id = "dlg-bg"; document.body.appendChild(bg); }
+    bg.innerHTML = '<div id="dlg"><h3>Rishta</h3><p></p>' + (o.input ? '<input id="dlg-in">' : '') + '<div class="db"></div></div>';
+    bg.querySelector("p").textContent = msg;
+    const box = bg.querySelector(".db");
+    const done = v => { dlgPrev = null; bg.classList.remove("on"); res(v); };
+    dlgPrev = done;
+    if (o.cancel) {
+      const c = document.createElement("button");
+      c.className = "alt";
+      c.textContent = o.cancelText || "Cancel";
+      c.onclick = () => done(o.input ? null : false);
+      box.appendChild(c);
+    }
+    const ok = document.createElement("button");
+    ok.textContent = o.okText || "OK";
+    ok.onclick = () => done(o.input ? $("dlg-in").value : true);
+    box.appendChild(ok);
+    bg.classList.add("on");
+    if (o.input) $("dlg-in").focus();
+  });
+}
+window.alert = m => dlg(String(m));
+const ask = (m, okText, cancelText) => dlg(m, { cancel: true, okText, cancelText });
+const askText = m => dlg(m, { cancel: true, input: true });
 const ADMIN_EMAIL = "lartkapagal@gmail.com";
 let maintOn = false, mtap = 0, mtapT;
 
@@ -476,7 +527,7 @@ function adminExit() {
 }
 
 async function adminDel(id) {
-  if (!confirm("Permanently delete this user and all data?")) return;
+  if (!(await ask("Permanently delete this user and all data?", "Delete"))) return;
   const { error } = await sb.rpc("admin_delete_user", { uid: id });
   if (error) { alert("Failed: " + error.message); return; }
   adminOpen();
@@ -785,7 +836,7 @@ const msgEls = {};
 async function unfriend() {
   if (!chatPeer) return;
   const id = chatPeer.id, name = chatPeer.name;
-  if (!confirm("Unfriend " + name + "?\n\nThe chat will be deleted for both of you. You can add each other again later.")) return;
+  if (!(await ask("Unfriend " + name + "?\n\nThe chat will be deleted for both of you. You can add each other again later.", "Unfriend"))) return;
   const { error } = await sb.rpc("unfriend", { pid: id });
   if (error) { toast("Could not unfriend."); return; }
   delete reqMap[id];
@@ -973,14 +1024,14 @@ function msgUser(id) {
 }
 
 async function reportUser(id) {
-  const reason = prompt("Why are you reporting this profile?");
+  const reason = await askText("Why are you reporting this profile?");
   if (!reason) return;
   const { error } = await sb.from("reports").insert({ reporter_id: me.id, reported_id: id, reason: reason });
   toast(error ? "Could not send the report." : "Report sent. Thank you.");
 }
 
 async function blockUser(id, btn) {
-  if (!confirm("Block this person? You will not see each other.")) return;
+  if (!(await ask("Block this person? You will not see each other.", "Block"))) return;
   const card = btn && btn.closest(".pc");
   if (card) card.remove();
   const { error } = await sb.from("blocks").insert({ user_id: me.id, blocked_id: id });
@@ -1156,9 +1207,9 @@ async function sendSupport(btn) {
   toast("Message sent. Our team will review it.");
 }
 
-function startDelete() {
-  if (!confirm("Do you really want to delete your account?")) return;
-  if (!confirm("Final confirmation: your profile will be hidden now and all your data will be permanently deleted after 15 days. Continue?")) return;
+async function startDelete() {
+  if (!(await ask("Do you really want to delete your account?", "Yes"))) return;
+  if (!(await ask("Final confirmation: your profile will be hidden now and all your data will be permanently deleted after 15 days. Continue?", "Delete"))) return;
   history.pushState({ set: 2 }, "");
   setView = "delete";
   $("sp-title").textContent = "Delete account";
@@ -1176,7 +1227,7 @@ async function confirmDelete() {
   const { error } = await sb.from("deletion_requests").insert({ user_id: me.id, reason: reason });
   if (error) { alert("Could not send your request. Please try again."); return; }
   await sb.auth.signOut();
-  alert("Your account is scheduled for deletion. All your data will be permanently deleted after 15 days. Log in within 15 days if you want to cancel.");
+  await alert("Your account is scheduled for deletion. All your data will be permanently deleted after 15 days. Log in within 15 days if you want to cancel.");
   location.reload();
 }
 
@@ -1233,7 +1284,7 @@ async function init() {
   const { data: del } = await sb.from("deletion_requests").select("requested_at").eq("user_id", me.id).maybeSingle();
   if (del) {
     const when = new Date(new Date(del.requested_at).getTime() + 15 * 86400000).toLocaleDateString();
-    if (confirm("Your account is scheduled for deletion on " + when + ". Press OK to cancel the deletion and keep your account.")) {
+    if (await ask("Your account is scheduled for deletion on " + when + ". Do you want to keep your account and cancel the deletion?", "Keep account", "Log out")) {
       await sb.from("deletion_requests").delete().eq("user_id", me.id);
     } else {
       await sb.auth.signOut();
