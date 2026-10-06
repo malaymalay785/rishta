@@ -1,0 +1,44 @@
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:#faf5f2;color:#33242a;line-height:1.75;font-size:16px}
+a{color:#b8325a}
+header{position:sticky;top:0;z-index:5;background:linear-gradient(160deg,#6d1a37,#b8325a);padding:10px 16px;box-shadow:0 2px 12px rgba(109,26,55,.3)}
+header a{color:#fff;text-decoration:none;font:19px Georgia,serif;display:flex;align-items:center;gap:10px;max-width:680px;margin:0 auto}
+header svg{width:30px;height:20px}
+.w{max-width:680px;margin:0 auto;padding:16px 16px 8px}
+nav.bc{font-size:12.5px;color:#8a6b75;background:#fff;padding:8px 12px;border-radius:10px;box-shadow:0 1px 6px rgba(109,26,55,.08);margin:0 0 14px}
+nav.bc a{text-decoration:none;font-weight:600}
+main.w>h1{background:linear-gradient(160deg,#6d1a37,#b8325a);color:#fff;font:700 26px/1.3 Georgia,serif;padding:26px 20px;border-radius:20px;margin:0 0 16px;box-shadow:0 8px 24px rgba(109,26,55,.28)}
+main.w>h1+p{font-size:17px;color:#4a3a40;background:#fff;border-left:5px solid #b8325a;padding:14px 16px;border-radius:0 14px 14px 0;box-shadow:0 2px 10px rgba(109,26,55,.07)}
+main.w{counter-reset:sec}
+main.w>h2{counter-increment:sec;display:flex;align-items:center;gap:10px;font:700 20px/1.35 Georgia,serif;color:#6d1a37;margin:32px 0 8px;padding-top:16px;border-top:1px solid #ecdde2}
+main.w>h2::before{content:counter(sec);flex:none;width:30px;height:30px;border-radius:50%;background:linear-gradient(160deg,#6d1a37,#b8325a);color:#fff;font:700 14px/30px Arial;text-align:center}
+h3{color:#b8325a;font-size:16px;margin:16px 0 4px}
+p,li{font-size:16px}
+main.w>ul,main.w>ol{list-style:none;padding:0;margin:10px 0;counter-reset:st}
+main.w>ul>li,main.w>ol>li{position:relative;background:#fff;border-radius:12px;padding:12px 14px 12px 46px;margin:8px 0;box-shadow:0 1px 6px rgba(109,26,55,.07)}
+main.w>ul>li::before{content:"\2713";position:absolute;left:14px;color:#b8325a;font-weight:700}
+main.w>ol>li{counter-increment:st}
+main.w>ol>li::before{content:counter(st);position:absolute;left:12px;top:12px;width:24px;height:24px;border-radius:50%;background:#f8e6ec;color:#b8325a;font:700 13px/24px Arial;text-align:center}
+.note{background:#fff8ec;border:1px solid #f3d9a8;border-left:5px solid #e0a43a;color:#6b4e12;border-radius:12px;padding:12px 14px;font-size:14.5px;margin:18px 0}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.c{background:#fff;border-radius:16px;padding:14px;border:1px solid #f0e2e7;box-shadow:0 2px 10px rgba(109,26,55,.08)}
+.c h2,.c h3{margin-top:0}
+.c a.t{font:18px Georgia,serif;color:#6d1a37;text-decoration:none;display:block;margin-bottom:4px}
+.c p,.c li{font-size:14px}
+.btn{display:block;text-align:center;background:linear-gradient(160deg,#6d1a37,#b8325a);color:#fff!important;padding:14px 22px;border-radius:14px;text-decoration:none;font-weight:700;margin:22px 0;box-shadow:0 6px 18px rgba(184,50,90,.35)}
+.rel{background:#fff;border-radius:16px;padding:6px 16px 8px;margin-top:30px;border:1px solid #f0e2e7;box-shadow:0 2px 10px rgba(109,26,55,.08)}
+.rel h2{font:700 19px Georgia,serif;color:#6d1a37;margin:12px 0 4px}
+.rel ul{list-style:none;padding:0;margin:0}
+.rel li a{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #f4e9ed;text-decoration:none;font-weight:600;font-size:15px}
+.rel li:last-child a{border-bottom:0}
+.rel li a::after{content:"\203A";color:#b8325a;font-size:20px;line-height:1}
+footer{margin-top:30px;background:#2b1a20;color:#d9c3cb;text-align:center;font-size:13px;line-height:2;padding:22px 16px 30px}
+footer a{color:#fff;text-decoration:none;margin:0 4px}
+.hub>h2{border-top:0;padding-top:0;margin-top:26px}
+.hub>h2::before{display:none}
+.card{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #f0e2e7;border-radius:16px;padding:14px;margin:10px 0;text-decoration:none;color:inherit;box-shadow:0 2px 10px rgba(109,26,55,.08)}
+.card::after{content:"\203A";color:#b8325a;font-size:24px;margin-left:auto}
+.card .ic{flex:none;width:48px;height:48px;border-radius:14px;background:#f8e6ec;font-size:24px;display:flex;align-items:center;justify-content:center}
+.card b{display:block;font:700 17px Georgia,serif;color:#6d1a37}
+.card small{display:block;font-size:14px;line-height:1.45;color:#6f5c64;margin-top:2px}
+@media(max-width:560px){.g{grid-template-columns:1fr}main.w>h1{font-size:23px;padding:22px 18px}}
