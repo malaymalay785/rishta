@@ -1,0 +1,26 @@
+# Rishta PK - permanent redirects for duplicate URL variants (SEO)
+/index.html / 301
+/about.html /about 301
+/privacy.html /privacy 301
+/terms.html /terms 301
+/about/ /about 301
+/privacy/ /privacy 301
+/terms/ /terms 301
+/guide /guide/ 301
+/guide/index.html /guide/ 301
+/guide/how-it-works.html /guide/how-it-works 301
+/guide/safety-security.html /guide/safety-security 301
+/guide/faq.html /guide/faq 301
+/guide/how-to-create-rishta-profile.html /guide/how-to-create-rishta-profile 301
+/guide/how-to-find-marriage-partner.html /guide/how-to-find-marriage-partner 301
+/guide/online-rishta-safety-tips.html /guide/online-rishta-safety-tips 301
+/guide/things-to-discuss-before-marriage.html /guide/things-to-discuss-before-marriage 301
+/guide/pakistani-family-rishta-guide.html /guide/pakistani-family-rishta-guide 301
+/guide/how-it-works/ /guide/how-it-works 301
+/guide/safety-security/ /guide/safety-security 301
+/guide/faq/ /guide/faq 301
+/guide/how-to-create-rishta-profile/ /guide/how-to-create-rishta-profile 301
+/guide/how-to-find-marriage-partner/ /guide/how-to-find-marriage-partner 301
+/guide/online-rishta-safety-tips/ /guide/online-rishta-safety-tips 301
+/guide/things-to-discuss-before-marriage/ /guide/things-to-discuss-before-marriage 301
+/guide/pakistani-family-rishta-guide/ /guide/pakistani-family-rishta-guide 301
