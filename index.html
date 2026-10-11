@@ -63,7 +63,16 @@ body { background: #fbf6f4; color: #2b1a20; }
 #splash p { opacity: .85; font-size: 15px; }
 .rings { animation: pop 1s ease both; }
 @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-#login { position: fixed; inset: 0; background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 24px 80px; }
+#login { position: fixed; inset: 0; background: linear-gradient(160deg, #6d1a37, #b8325a); color: #fff; display: flex; flex-direction: column; align-items: stretch; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.lg-hero { position: relative; flex-shrink: 0; width: 100%; min-height: 100vh; min-height: 100dvh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 24px 80px; }
+.lg-more { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; color: #fff; font-size: 13px; opacity: .85; text-decoration: none; }
+#seo { width: 100%; max-width: 640px; margin: 0 auto; padding: 40px 22px 70px; box-sizing: border-box; text-align: left; line-height: 1.65; font-size: 15px; }
+#seo h1 { font-family: Georgia, serif; font-size: 26px; line-height: 1.25; margin: 0 0 14px; }
+#seo h2 { font-family: Georgia, serif; font-size: 20px; margin: 28px 0 8px; }
+#seo p { margin: 0 0 12px; }
+#seo ul { padding-left: 18px; margin: 0 0 12px; }
+#seo li { margin-bottom: 6px; }
+#seo a { color: #fff; text-decoration: underline; }
 #login .logo-h { font-family: Georgia, serif; font-size: 44px; margin: 14px 0 8px; }
 #login p { opacity: .9; line-height: 1.5; }
 #login .gbtn { position: absolute; bottom: 90px; left: 24px; right: 24px; max-width: 320px; margin: 0 auto; }
@@ -292,18 +301,47 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     <p>Find the right match</p>
   </div>
 
-  <div id="login" style="display:none">
+  <div id="login" style="display:none"><div class="lg-hero">
     <svg width="90" height="60" viewBox="0 0 90 60" fill="none" stroke="#fff" stroke-width="5">
       <circle cx="33" cy="30" r="22"/><circle cx="57" cy="30" r="22"/>
     </svg>
     <div class="logo-h">Rishta PK</div>
     <p>Create your profile, meet people you like<br>and chat with respect</p>
-    <p class="lg-info">Rishta PK is a free matchmaking website for Pakistani singles and families in Pakistan and abroad. <a href="/guide/">Rishta Guide</a> · <a href="/guide/how-it-works">How it works</a> · <a href="/guide/safety-security">Safety</a> · <a href="/guide/faq">FAQ</a></p>
+
     <button class="gbtn" onclick="loginGoogle()">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continue with Google
     </button>
     <small>By continuing, you agree to our <a href="/terms" style="color:#fff">Terms</a> and <a href="/privacy" style="color:#fff">Privacy Policy</a> · <a href="/about" style="color:#fff">About</a> · <a href="/guide/" style="color:#fff">Guide</a></small>
+    <a class="lg-more" href="#seo" onclick="document.getElementById('seo').scrollIntoView({behavior:'smooth'});return false">Learn more &#8595;</a>
+    </div>
+    <section id="seo">
+      <h1>Free Pakistani Matrimonial and Rishta Website</h1>
+      <p>Rishta PK is a free matchmaking website for Pakistani singles and families living in Pakistan and abroad. Whether you are looking for a rishta for yourself, your son, your daughter or a sibling, you can create a profile in a few minutes and start meeting suitable people with respect and privacy.</p>
+      <h2>What is Rishta PK?</h2>
+      <p>Rishta PK is an online rishta platform built around Pakistani family values. Every profile shows age, city, education, sect, caste, occupation, family details and partner wishes, so you can judge a match quickly without wasting time on unsuitable proposals.</p>
+      <h2>How it works</h2>
+      <ul>
+        <li>Sign in with your Google account. No password is needed.</li>
+        <li>Complete your profile in 4 short steps and add a clear photo.</li>
+        <li>Browse profiles of girls and boys and send a friend request to the ones you like.</li>
+        <li>Chat privately only after the other person accepts your request.</li>
+      </ul>
+      <h2>Who is it for?</h2>
+      <p>Pakistani singles looking for a life partner, parents searching for a rishta for their children, divorced or widowed people who want a new beginning, and overseas Pakistanis in the UAE, Saudi Arabia, UK, USA and Canada who want a match from their own culture.</p>
+      <h2>Your safety comes first</h2>
+      <p>Chat opens only when both people agree. You can report or block any profile at any time. Please read our <a href="/guide/online-rishta-safety-tips">online rishta safety tips</a> and the <a href="/guide/safety-security">safety and security page</a> before you meet anyone.</p>
+      <h2>Rishta guides</h2>
+      <ul>
+        <li><a href="/guide/how-it-works">How Rishta PK works</a></li>
+        <li><a href="/guide/how-to-create-rishta-profile">How to create a rishta profile</a></li>
+        <li><a href="/guide/how-to-find-marriage-partner">How to find a marriage partner</a></li>
+        <li><a href="/guide/pakistani-family-rishta-guide">Pakistani family rishta guide</a></li>
+        <li><a href="/guide/things-to-discuss-before-marriage">Things to discuss before marriage</a></li>
+        <li><a href="/guide/faq">Frequently asked questions</a></li>
+      </ul>
+      <p><a href="/about">About us</a> · <a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms</a></p>
+    </section>
   </div>
 
   <div id="setup" style="display:none">
