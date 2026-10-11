@@ -1437,12 +1437,20 @@ async function askNotif() {
   if (window.Notification && Notification.permission === "granted") setTimeout(function () { location.reload(); }, 1500);
 }
 
+function skipNotif() {
+  try { localStorage.setItem("nskip", "1"); } catch (e) {}
+  const o = document.getElementById("notif-wall");
+  if (o) o.remove();
+}
 function forceNotif() {
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(function (OneSignal) {
     const chk = () => {
       let o = document.getElementById("notif-wall");
       if (window.Notification && Notification.permission === "granted") { if (o) o.remove(); try { OneSignal.User.PushSubscription.optIn(); } catch (e) {} return; }
+      let sk = false;
+      try { sk = localStorage.getItem("nskip") === "1"; } catch (e) {}
+      if (sk) { if (o) o.remove(); return; }
       if (!o) {
         o = document.createElement("div");
         o.id = "notif-wall";
@@ -1454,7 +1462,8 @@ function forceNotif() {
         '<p style="line-height:1.5;opacity:.92;max-width:300px">Without notifications you will miss messages and friend requests. We only send messages, requests and account alerts. No ads, no spam.</p>' +
         (denied
           ? '<p style="line-height:1.5;max-width:300px;margin-top:12px;background:rgba(255,255,255,.18);padding:10px 12px;border-radius:10px;font-size:13px">Notifications are blocked. Tap the lock icon next to the site address, open Permissions, set Notifications to Allow, then press the button below.</p><button class="gbtn" style="max-width:300px;margin-top:16px" onclick="location.reload()">I have allowed it</button>'
-          : '<button class="gbtn" style="max-width:300px;margin-top:20px" onclick="askNotif()">Turn on notifications</button>');
+          : '<button class="gbtn" style="max-width:300px;margin-top:20px" onclick="askNotif()">Turn on notifications</button>') +
+        '<button style="width:auto;background:none;border:0;color:#fff;opacity:.85;text-decoration:underline;margin-top:14px;font-size:14px" onclick="skipNotif()">Skip for now</button>';
     };
     window.OneSignal = OneSignal;
     OneSignal.Notifications.addEventListener("permissionChange", chk);
